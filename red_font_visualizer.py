@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-#The font was created 1/06/2016 between 17:48 and 19:41 by Akira BAES and was further edited later on
 
 from tkinter import *
 import tkinter as tk
@@ -13,7 +12,7 @@ root.title("Minifont viewer")
 root.configure(background="black")
 
 characters = [None]*(16*8)
-fontbase = PhotoImage(file="mini red sadface.png")
+fontbase = PhotoImage(file="minired_sadface.png")
 
 font_width = 2
 spacesize = 1
