@@ -1,0 +1,17 @@
+﻿ansi128:
+ ☺☻♥♦♣♠•◘○◙♂♀♪♫☼
+►◄↕‼¶§▬↨↑↓→←∟↔▲▼
+ !"#$%&'()*+,-./
+0123456789:;<=>?
+@ABCDEFGHIJKLMNO
+PQRSTUVWXYZ[\]^_
+`abcdefghijklmno
+pqrstuvwxyz{|}~⌂
+
+True ascii:
+ !"#$%&'()*+,-./
+0123456789:;<=>?
+@ABCDEFGHIJKLMNO
+PQRSTUVWXYZ[\]^_
+`abcdefghijklmno
+pqrstuvwxyz{|}~
