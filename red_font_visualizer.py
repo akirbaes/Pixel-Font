@@ -32,6 +32,8 @@ font_hsep = 0
 
 font_height = 4
 font_vsep = 1
+font_x0 = 0
+font_y0 = 0
 	
 textwindow = None
 	
@@ -51,10 +53,10 @@ def screenshot(canvas,text):
 	image_name = text[:10]+"_"+time+".png"
 	shot = ImageGrab.grab()
 	
-	print(dir(shot))
-	print("W1=",shot.width)
+	#print(dir(shot))
+	#print("W1=",shot.width)
 	shot=shot.crop(box)
-	print("W2=",shot.width)
+	#print("W2=",shot.width)
 	shot.save(image_name)
 	return image_name
 
@@ -72,7 +74,10 @@ def get_char_image(charnum):
 		return None
 	return characters[charnum]
 
-def wrap_text(pixels_width, text):
+def lines_height(lines):
+	return lines*font_height+(lines-1)*font_vsep+font_y0
+	
+def wrap_text(pixels_width, pixels_height, text, leave_early = True):
 	lines = text.split("\n")
 	ans = []
 	#print("Width:",pixels_width)
@@ -97,6 +102,8 @@ def wrap_text(pixels_width, text):
 			#print("W2:",repr(word),w2,"Pixels+space:",pixels_width+spacesize)
 			if w2>pixels_width + spacesize:
 				ans.append(ansline)
+				if(lines_height(len(ans))>pixels_height and leave_early):
+					return ans
 				ansline = ""
 				w = lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
 				while(w>pixels_width + spacesize):
@@ -112,6 +119,8 @@ def wrap_text(pixels_width, text):
 						w = lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
 						if(w<=pixels_width+spacesize):
 							ans.append(word2)
+							if(lines_height(len(ans))>pixels_height and leave_early):
+								return ans
 							#print("Appended:",word2)
 							word = word[len(word)-index:]
 							#print("Remains:",word)
@@ -123,9 +132,11 @@ def wrap_text(pixels_width, text):
 				ansline+=word+" "
 				w = w2
 		ans.append(ansline)
+		if(lines_height(len(ans))>pixels_height and leave_early):
+			return ans
 	return ans
 
-def measure(text):
+def measure(wrapped_text):
 	measured_width = 0
 	measured_height = 0
 	for index, line in enumerate(wrapped_text):
@@ -136,8 +147,8 @@ def measure(text):
 				x+=spacesize
 			else:
 				x+=font_width+font_hsep
-				measured_width = min(x-font_hsep,measured_width)
-		measured_height = min(measured_height, y+(line!="")*font_height)
+				measured_width = max(x-font_hsep,measured_width)
+		measured_height = max(measured_height, y+(line!="")*font_height)
 	return measured_width,measured_height
 
 def draw_text(canvas,wrapped_text):
@@ -152,6 +163,8 @@ def draw_text(canvas,wrapped_text):
 				if(char_image!=None):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
 				x+=font_width+font_hsep
+			if(y>canvas.winfo_height()):
+				break
 
 def load_mini_font():
 	font_width = 2
@@ -183,8 +196,8 @@ def load_special_chars(frame,textarea):
 				def place_char():
 					textarea.insert(INSERT,current_char)
 					textarea.event_generate("<Key>")
-					print("Inserted ",ord(current_char))
-					flush()
+					#print("Inserted ",ord(current_char))
+					#flush()
 				return place_char
 			counter += 1
 			if(counter > DEF_BUTTONSROW):
@@ -276,14 +289,22 @@ Is it not proof that I possess the stone of life?""".upper())
 	myframe.pack(fill=BOTH, expand=YES)
 	mycanvas = Canvas(myframe,
 		width=canvaswidth, height=canvasheight, bg="black", highlightthickness=0)
-	mycanvas.pack(fill=BOTH, expand=YES)
 	
-	def change_callback(*args):
+	#https://stackoverflow.com/questions/18736465/how-to-center-a-tkinter-widget
+	mycanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+	#mycanvas.pack(fill=BOTH, expand=YES)
+	
+	mycanvas.current_after = None
+	def redraw():
+		mycanvas.current_after = None
 		mycanvas.delete("all")
-		if(is_fit_mode()):
-			draw_text(mycanvas,wrap_text(mycanvas.winfo_width(),text=windowText.get()))
-		else:
-			draw_text(mycanvas,wrap_text(int(widthBox.get()),text=windowText.get()))
+		draw_text(mycanvas,wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get()))
+	def change_callback(*args):
+		if(mycanvas.current_after != None):
+			mycanvas.after_cancel(mycanvas.current_after)
+			#If several changes are made in a very little time, don't redraw several times
+		mycanvas.current_after = mycanvas.after(5,redraw)
+	
 	bottomFrame = Frame(root) #Contains several icons
 	bottomFrame.pack(side=BOTTOM,fill=X)
 	
@@ -309,19 +330,21 @@ Is it not proof that I possess the stone of life?""".upper())
 	
 	#The boxes are only active when Fit is disabled
 	def sizechange_callback(*args):
-		if(is_center_mode()):
-			mycanvas.config(width=widthVar.get(), height=heightVar.get())
-			change_callback()
+		mycanvas.config(width=widthVar.get(), height=heightVar.get())
+		change_callback()
 	
 	widthVar.trace("w",sizechange_callback)
 	heightVar.trace("w",sizechange_callback)
 	
-	#FIT toggle
-	modeToggle = IntVar()
-	modeToggle.set(False)
-	toggleCheck = Checkbutton(coordsFrame, text="Fit", variable=modeToggle)
-	toggleCheck.pack(side=LEFT)
-	CreateToolTip(toggleCheck,"Fit the window size")
+	def fitToText():
+		w,h = measure(wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False))
+		print(w,h)
+		widthVar.set(w)
+		heightVar.set(h)
+	#FIT button
+	fitButton = Button(coordsFrame,text="Fit",command=fitToText)
+	fitButton.pack(side=LEFT)
+	CreateToolTip(fitButton,"Fit the canvas to the text")
 	
 	
 	def screenshotCallback():
@@ -368,42 +391,40 @@ Is it not proof that I possess the stone of life?""".upper())
 	"""
 		
 	
-	def window_resize_event(event):
-		w, h = event.width, event.height
-		if(is_fit_mode()):
-			heightVar.set(h)
-			widthVar.set(w)
-			#heightVar.set(mycanvas.winfo_height())
-			#widthVar.set(mycanvas.winfo_width())
-			change_callback()
-			
-		
-		#root.minsize(width=max(mycanvas., height=200)
-		#root.maxsize(width=650, height=500)
-	mycanvas.bind("<Configure>", window_resize_event)
+	#def window_resize_event(event):
+	#w, h = event.width, event.height
+	"""if(is_fit_mode()):
+		heightVar.set(h)
+		widthVar.set(w)
+		#heightVar.set(mycanvas.winfo_height())
+		#widthVar.set(mycanvas.winfo_width())
+		change_callback()
+		"""
+	
+	#root.minsize(width=max(mycanvas., height=200)
+	#root.maxsize(width=650, height=500)
+	#mycanvas.bind("<Configure>", window_resize_event)
 	#http://effbot.org/zone/tkinter-window-size.htm
 	#myframe.bind("<Configure>", window_resize_event)
 	
-	def is_fit_mode():
-		return modeToggle.get()
-	def is_center_mode():
-		return not modeToggle.get()
 		
-	def mode_toggle_callback(*args):
-		if(is_fit_mode()):
-			widthBox.config(state='disabled')
-			heightBox.config(state='disabled')
-			mycanvas.pack(fill=BOTH, expand=NO)
-		else:
-			widthBox.config(state='normal')
-			heightBox.config(state='normal')
-			#https://stackoverflow.com/questions/18736465/how-to-center-a-tkinter-widget
-			mycanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
-			sizechange_callback()
-	modeToggle.trace("w",mode_toggle_callback)
+	def click(event):
+		x,y = event.x, event.y
+		myframe.previous_pos = (x,y)
+	def unclick(event):
+		myframe.previous_pos = None
+	def changesize(event):
+		x,y = event.x, event.y
+		if(myframe.previous_pos!=None):
+			dx,dy = x-myframe.previous_pos[0], y-myframe.previous_pos[1]
+			myframe.previous_pos = (x,y)
+			widthVar.set(widthVar.get()+dx)
+			heightVar.set(heightVar.get()+dy)
+	myframe.previous_pos = None
+	myframe.bind("<B1-Motion>", changesize)
+	myframe.bind("<Button-1>", click)
+	myframe.bind("<ButtonRelease-1>", unclick)
 	
-	
-	mode_toggle_callback()
 	sizechange_callback()
 	
 	sys.stdout.flush()
