@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-
+import io
 from tkinter import *
 import tkinter as tk
 import datetime
 import pyscreenshot as ImageGrab
 from tk_ToolTip_class101 import CreateToolTip
 flush = sys.stdout.flush
+from tkinter import font
 root = Tk()
 root.geometry("256x256")
+sample_text_file = "sample_text.txt"
 root.title("Minifont viewer")
 root.configure(background="black")
+
+helv12 = font.Font(family='Arial', size=12)
 
 characters = [None]*(16*8)
 fontbase = PhotoImage(file="minired_sadface.png")
@@ -45,6 +49,15 @@ def screenshot(canvas,text):
 	print("W2=",shot.width)
 	shot.save(image_name)
 	return image_name
+
+
+filename = "special_chars.txt"
+allchars = ""
+with io.open(filename,'r',encoding='utf8') as f:
+	allchars = f.read().replace("\n","")
+	
+def get_char_ascii_index(character):
+	return allchars.find(character)
 	
 def get_char_image(charnum):
 	if(charnum<=0 or charnum>=len(characters)):
@@ -127,7 +140,7 @@ def draw_text(canvas,wrapped_text):
 			if(letter==" "):
 				x+=spacesize
 			else:
-				char_image = get_char_image(ord(letter))
+				char_image = get_char_image(get_char_ascii_index(letter))
 				if(char_image!=None):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
 				x+=font_width+font_hsep
@@ -146,14 +159,91 @@ def load_font():
 			characters[x+y*16] = \
 				subimage(fontbase, dx, dy, dx+font_width, dy+font_height)
 				
-def create_textwindow(root, textvariable):
+
+				
+def load_special_chars(frame,textarea):
+	filename = "special_chars2.txt"
+	with io.open(filename,'r',encoding='utf8') as f:
+		text = f.read()
+	characters = (x for x in range(1,33))
+	
+	frame1 = Frame(frame, bg="gray20")
+	frame1.pack(fill=BOTH, expand=YES)
+	frame2 = Frame(frame, bg="gray20")
+	frame2.pack(fill=BOTH, expand=YES)
+	
+	for character in characters:
+		if(get_char_image(character)!=None):
+			def char_command(character):
+				current_char = text[character]
+				def place_char():
+					textarea.insert(INSERT,current_char)
+					textarea.event_generate("<Key>")
+					print("Inserted ",ord(current_char))
+					flush()
+				return place_char
+			if(character<16):
+				frame = frame1
+			else:
+				frame = frame2
+			button = Button(frame,text=text[character],command=char_command(character),font=helv12)
+			button.pack(side = LEFT)
+			#print("Insert button for character",character)
+			#flush()
+	"""
+	for character in text:
+		if(get_char_image(ord(character))!=None):
+			def place_char():
+				textarea.insert(INSERT,character)
+			button = Button(frame,text=character,command=place_char,font=helv12)
+			button.pack(side = LEFT)
+			print("Insert button for character",ord(character))
+			flush()"""
+def create_textwindow(root,textvariable):
 	global textwindow
+	
+	
 	if textwindow == None or not textwindow.winfo_exists():
 		textwindow = Toplevel()
-			
-		myframe = Frame(root, bg="gray10")
-		myframe.pack(fill=BOTH, expand=YES)
+		textwindow.title("Text input")
+		mainframe = Frame(textwindow, bg="gray10")
+		mainframe.pack(fill=BOTH, expand=YES)
+		textarea = Text(mainframe, width=60, height=20,bg="black", fg="white",insertbackground="white")
+		textarea.insert(END, textvariable.get())
+		textarea.pack()#fill=BOTH, expand=YES)
+		textarea.focus_force()
 		
+		def update_text(*args):
+			textarea.after(100, lambda:
+				textvariable.set(textarea.get('1.0', 'end-1c'))
+				)
+			textwindow.title("Text input (*)")
+		textarea.bind("<Key>", update_text)
+		textwindow.important = textarea
+		
+		bottomFrame = Frame(textwindow, bg="gray10")
+		bottomFrame.pack(side=BOTTOM,fill=X)
+		load_special_chars(bottomFrame,textarea)
+		
+		textwindow.geometry(("+%d+%d")%(
+			root.winfo_x()+root.winfo_width(),root.winfo_y()))
+			
+		textarea.previous_text = textarea.get('1.0', 'end-1c')
+		
+		def save_text():
+			current_text = textarea.get('1.0', 'end-1c')
+			if(textarea.previous_text != current_text):
+				with io.open(sample_text_file,'w',encoding='utf8') as f:
+					f.write(current_text)
+			textwindow.title("Text input")
+			textarea.after(5000, save_text)
+				
+		textarea.after(5000, save_text)
+			
+	elif(textwindow!=None and textwindow.winfo_exists()):
+		textwindow.important.focus_force()
+		textwindow.geometry(("+%d+%d")%(
+			root.winfo_x()+root.winfo_width(),root.winfo_y()))
 		
 if(__name__ == "__main__"):
 	load_font()
@@ -162,7 +252,11 @@ if(__name__ == "__main__"):
 	
 	windowText = StringVar()
 	#Default temporary text
-	windowText.set("""I am the most hideous creature in the realm. 
+	try:
+		with io.open(sample_text_file,'r',encoding='utf8') as f:
+			windowText.set(f.read())
+	except:
+		windowText.set("""I am the most hideous creature in the realm. 
 A more abject appearance you will not find.
 
 I have fallen countless times before your troops, and yet I am here.
@@ -173,12 +267,6 @@ Is it not proof that I possess the stone of life?""".upper())
 	myframe.pack(fill=BOTH, expand=YES)
 	mycanvas = Canvas(myframe,
 		width=canvaswidth, height=canvasheight, bg="black", highlightthickness=0)
-	"""
-	#load default text
-	for x in range(16):
-		for y in range(8):
-			charnum = 16*y+x
-			mycanvas.create_image(x*font_width,y*font_height,image=get_char_image(charnum),anchor=NW)"""
 	mycanvas.pack(fill=BOTH, expand=YES)
 	
 	def change_callback(*args):
@@ -244,22 +332,31 @@ Is it not proof that I possess the stone of life?""".upper())
 	
 	#OPTIONS [TODO]
 	#Entries for hsep, vsep, spacesize
-	#Toggle for crop image to fit text
+	#Toggle for crop image to fit text, or crop all?
+	#[TODO]starting position
+	#[TODO] other font
+	#[TODO] all caps or not
+	
 	optionsButton = Button(bottomFrame,text="☼")
 	optionsButton.pack(side=RIGHT)
 	CreateToolTip(optionsButton,"Open Options window")
 	
+	def textbuttonCallback():
+		create_textwindow(root,windowText)
+	
 	#Text window [TODO]
 	#Freely input the text that will be changed
-	
-	textButton = Button(bottomFrame,text="Text")
+	textButton = Button(bottomFrame,text="Text",command=textbuttonCallback)
 	textButton.pack(side=RIGHT)
 	CreateToolTip(textButton,"Open Text input window")
 	
+	
+	windowText.trace("w",change_callback)
+	"""
 	popupButton = Button(bottomFrame,text="α")
 	popupButton.pack(side=RIGHT)
 	CreateToolTip(popupButton,"Open Special characters window")
-	
+	"""
 		
 	
 	def window_resize_event(event):
