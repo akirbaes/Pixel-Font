@@ -47,20 +47,50 @@ def subimage(sheet, l, t, r, b):
 def screenshot(canvas,text):
 	#https://stackoverflow.com/questions/47653748/performing-imagegrab-on-tkinter-screen
 	box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
-	print(box)
+	#print(box)
 	flush()
 	time = str(datetime.datetime.now()).replace(":","-")
 	image_name = text[:10]+"_"+time+".png"
 	shot = ImageGrab.grab()
-	
 	#print(dir(shot))
 	#print("W1=",shot.width)
 	shot=shot.crop(box)
 	#print("W2=",shot.width)
 	shot.save(image_name)
 	return image_name
+	
+try:
+	import win32clipboard
+	
+	#global send_to_clipboard, copy_screenshot_to_clipboard
+	def send_to_clipboard(clip_type, data):
+		#https://stackoverflow.com/questions/7050448/write-image-to-windows-clipboard-in-python-with-pil-and-win32clipboard/7052068#7052068
+		win32clipboard.OpenClipboard()
+		win32clipboard.EmptyClipboard()
+		win32clipboard.SetClipboardData(clip_type, data)
+		win32clipboard.CloseClipboard()
+	
+	def copy_screenshot_to_clipboard(canvas):
+		box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
+		
+		shot = ImageGrab.grab(box)
+		
+		output = io.BytesIO()
+		shot.convert("RGB").save(output, "BMP")
+		data = output.getvalue()[14:]
+		output.close()
+		
+		send_to_clipboard(win32clipboard.CF_DIB, data)
+		
 
+except:
+	send_to_clipboard = None
+	copy_screenshot_to_clipboard = None
+	
+#def send_to_clipboard(clip_type, data):	
+#def copy_screenshot_to_clipboard(mycanvas):
 
+	
 filename = "special_chars.txt"
 allchars = ""
 with io.open(filename,'r',encoding='utf8') as f:
@@ -357,10 +387,17 @@ Is it not proof that I possess the stone of life?""".upper())
 	screenshotButton.pack(side=LEFT)
 	CreateToolTip(screenshotButton,"Take a screenshot")
 	
-	#[TODO]
-	clipboardButton = Button(bottomFrame,text="Copy")
+	def clipboardCallback():
+		if(copy_screenshot_to_clipboard!=None):
+			copy_screenshot_to_clipboard(mycanvas)
+			print("Image copied to clipboard")
+			flush()
+		else:
+			print("Clipboard functionality not available. Requires pypiwin32")
+			flush()
+	clipboardButton = Button(bottomFrame,text="Copy", command = clipboardCallback)
 	clipboardButton.pack(side=LEFT)
-	CreateToolTip(clipboardButton,"Copy image to clipboard [TODO]")
+	CreateToolTip(clipboardButton,"Copy image to clipboard")
 	
 	#OPTIONS [TODO]
 	#Entries for hsep, vsep, spacesize
@@ -376,7 +413,7 @@ Is it not proof that I possess the stone of life?""".upper())
 	def textbuttonCallback():
 		create_textwindow(root,windowText)
 	
-	#Text window [TODO]
+	#Text window
 	#Freely input the text that will be changed
 	textButton = Button(bottomFrame,text="Text",command=textbuttonCallback)
 	textButton.pack(side=RIGHT)
