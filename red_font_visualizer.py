@@ -8,12 +8,20 @@ from tk_ToolTip_class101 import CreateToolTip
 flush = sys.stdout.flush
 from tkinter import font
 root = Tk()
-root.geometry("256x256")
 sample_text_file = "sample_text.txt"
 root.title("Minifont viewer")
+root.iconbitmap("2x8_MINI_RED_FONT_EDITOR_ICON.ico")
 root.configure(background="black")
 
-helv12 = font.Font(family='Arial', size=12)
+root.geometry("160x160")
+#DEF_FRAME = (128,128)
+DEF_CANVAS = (64,64)
+DEF_TEXTAREA = (80,5)
+DEF_TEXTWINDOW = (256,256)
+DEF_BUTTONSROW = 13
+
+font12 = font.Font(family='Arial', size=12)
+font12 = 'TkFixedFont'
 
 characters = [None]*(16*8)
 fontbase = PhotoImage(file="minired_sadface.png")
@@ -145,7 +153,7 @@ def draw_text(canvas,wrapped_text):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
 				x+=font_width+font_hsep
 
-def load_font():
+def load_mini_font():
 	font_width = 2
 	font_hsep = 1
 	font_height = 4
@@ -162,43 +170,30 @@ def load_font():
 
 				
 def load_special_chars(frame,textarea):
-	filename = "special_chars2.txt"
+	filename = "button_special_chars.txt"
 	with io.open(filename,'r',encoding='utf8') as f:
 		text = f.read()
-	characters = (x for x in range(1,33))
 	
-	frame1 = Frame(frame, bg="gray20")
-	frame1.pack(fill=BOTH, expand=YES)
-	frame2 = Frame(frame, bg="gray20")
-	frame2.pack(fill=BOTH, expand=YES)
-	
-	for character in characters:
-		if(get_char_image(character)!=None):
-			def char_command(character):
-				current_char = text[character]
+	charsframe = Frame(frame, bg="gray20")
+	charsframe.pack(fill=BOTH, expand=YES)
+	counter = 0;
+	for character in text:
+		if(get_char_image(get_char_ascii_index(character))!=None):
+			def char_command(current_char):
 				def place_char():
 					textarea.insert(INSERT,current_char)
 					textarea.event_generate("<Key>")
 					print("Inserted ",ord(current_char))
 					flush()
 				return place_char
-			if(character<16):
-				frame = frame1
-			else:
-				frame = frame2
-			button = Button(frame,text=text[character],command=char_command(character),font=helv12)
+			counter += 1
+			if(counter > DEF_BUTTONSROW):
+				charsframe = Frame(frame, bg="gray20")
+				charsframe.pack(fill=BOTH, expand=YES)
+				counter=1
+			button = Button(charsframe,text=character,command=char_command(character),font=font12)
 			button.pack(side = LEFT)
-			#print("Insert button for character",character)
-			#flush()
-	"""
-	for character in text:
-		if(get_char_image(ord(character))!=None):
-			def place_char():
-				textarea.insert(INSERT,character)
-			button = Button(frame,text=character,command=place_char,font=helv12)
-			button.pack(side = LEFT)
-			print("Insert button for character",ord(character))
-			flush()"""
+			
 def create_textwindow(root,textvariable):
 	global textwindow
 	
@@ -208,11 +203,17 @@ def create_textwindow(root,textvariable):
 		textwindow.title("Text input")
 		mainframe = Frame(textwindow, bg="gray10")
 		mainframe.pack(fill=BOTH, expand=YES)
-		textarea = Text(mainframe, width=60, height=20,bg="black", fg="white",insertbackground="white")
-		textarea.insert(END, textvariable.get())
-		textarea.pack()#fill=BOTH, expand=YES)
-		textarea.focus_force()
+		textarea = Text(mainframe, width=DEF_TEXTAREA[0], height=DEF_TEXTAREA[1],bg="black", fg="white",insertbackground="white")
 		
+		textarea.insert(END, textvariable.get())
+		line=textvariable.get().count("\n")
+		column=len((textvariable.get().split())[-1])
+		#https://stackoverflow.com/questions/3215549/set-cursor-position-in-a-text-widget
+		textarea.mark_set("insert", "%d.%d" % (line + 1, column + 1))
+		
+		textarea.pack(side=TOP,fill=BOTH, expand=YES)
+		textarea.focus_force()
+		textarea.lower()
 		def update_text(*args):
 			textarea.after(100, lambda:
 				textvariable.set(textarea.get('1.0', 'end-1c'))
@@ -225,8 +226,13 @@ def create_textwindow(root,textvariable):
 		bottomFrame.pack(side=BOTTOM,fill=X)
 		load_special_chars(bottomFrame,textarea)
 		
+		
+		
+		dx = 8
 		textwindow.geometry(("+%d+%d")%(
-			root.winfo_x()+root.winfo_width(),root.winfo_y()))
+			root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+			
+		textwindow.geometry(("%dx%d")%(DEF_TEXTWINDOW[0],DEF_TEXTWINDOW[1]))
 			
 		textarea.previous_text = textarea.get('1.0', 'end-1c')
 		
@@ -241,14 +247,17 @@ def create_textwindow(root,textvariable):
 		textarea.after(5000, save_text)
 			
 	elif(textwindow!=None and textwindow.winfo_exists()):
+		dx = textwindow.winfo_rootx()-textwindow.winfo_x()
+		#print(dx)
+		#flush()
 		textwindow.important.focus_force()
 		textwindow.geometry(("+%d+%d")%(
-			root.winfo_x()+root.winfo_width(),root.winfo_y()))
+			root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
 		
 if(__name__ == "__main__"):
-	load_font()
-	canvaswidth = 32
-	canvasheight = 128
+	load_mini_font()
+	canvaswidth = DEF_CANVAS[0]
+	canvasheight = DEF_CANVAS[0]
 	
 	windowText = StringVar()
 	#Default temporary text
