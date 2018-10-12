@@ -25,17 +25,57 @@ font12 = 'TkFixedFont'
 
 characters = [None]*(16*8)
 fontbase = PhotoImage(file="minired_sadface.png")
+textwindow = None
+optionswindow = None
 
-font_width = 2
+FONT_WIDTH = 2
+FONT_HEIGHT = 4
+
+#Nonwithstanding existing .ini file
 spacesize = 1
 font_hsep = 0
-
-font_height = 4
 font_vsep = 1
 font_x0 = 1
 font_y0 = 1
+allcaps = 0
 	
-textwindow = None
+def save_options(): #current_height, current_width):
+	f = open("options.ini","w")
+	f.write(str(font_hsep)+"\n")
+	f.write(str(font_vsep)+"\n")
+	f.write(str(spacesize)+"\n")
+	f.write(str(font_x0)  +"\n")
+	f.write(str(font_y0)  +"\n")
+	f.write(str(allcaps)  +"\n")
+	f.close()
+	#file.write(current_height)
+	#file.write(current_width)
+	
+def load_options():
+	global font_hsep,\
+	       font_vsep,\
+	       spacesize,\
+	       font_x0  ,\
+	       font_y0  ,\
+		   allcaps
+	
+	f = open("options.ini","r")
+	data = f.readlines()
+	f.close()
+	newdata = []
+	#print(data)
+	for x in data:
+		try:
+			newdata.append(int(x))
+		except:
+			print(x,"could not be read")
+	font_hsep = newdata.pop(0)
+	font_vsep = newdata.pop(0)
+	spacesize = newdata.pop(0)
+	font_x0   = newdata.pop(0)
+	font_y0   = newdata.pop(0)
+	allcaps   = newdata.pop(0)
+	#return newdata.pop(0), newdata.pop(0)
 	
 def subimage(sheet, l, t, r, b):
 	#https://stackoverflow.com/questions/16579674/using-spritesheets-in-tkinter
@@ -87,9 +127,6 @@ except:
 	send_to_clipboard = None
 	copy_screenshot_to_clipboard = None
 	
-#def send_to_clipboard(clip_type, data):	
-#def copy_screenshot_to_clipboard(mycanvas):
-
 	
 filename = "special_chars.txt"
 allchars = ""
@@ -105,64 +142,78 @@ def get_char_image(charnum):
 	return characters[charnum]
 
 def lines_height(lines):
-	return lines*font_height+(lines-1)*font_vsep+font_y0
+	return lines*FONT_HEIGHT+(max(0,lines-1))*font_vsep
+	
+def word_width(word):
+	xlong = 0
+	for char in word:
+		if(char == " "):
+			xlong+=spacesize
+		else:
+			xlong+=FONT_WIDTH+font_hsep
+	xshort = xlong
+	for i in range(len(word)-1,-1,-1):
+		if(word[i]==" "):
+			xshort-=spacesize
+		else:
+			break
+	xshort-=font_hsep
+	return xlong, xshort
+	
+def cut_word(word,pixels_width):
+	cutoff = len(word)
+	for i in range(len(word)):
+		xlong,xshort = word_width(word[:i])
+		if(xshort>pixels_width):
+			cutoff=i-1
+			#print(xshort,word[:cutoff])
+			break
+	return word[:cutoff], word[cutoff:]
 	
 def wrap_text(pixels_width, pixels_height, text, leave_early = True):
+	#print("Allcaps is:",allcaps)
+	if(allcaps==1):
+		text = text.upper()
 	lines = text.split("\n")
 	ans = []
 	#print("Width:",pixels_width)
-	pixels_width = max(font_width+font_hsep,pixels_width)
+	pixels_width = max(FONT_WIDTH+font_hsep,pixels_width)
 	#print("Corrected:",pixels_width)
-	#print("Font width:",font_width)
+	#print("Font width:",FONT_WIDTH)
 	#print("Hsep:",font_hsep)
 	#print("Spacesize:",spacesize)
-	flush()
+	#flush()
 	for line in lines:
 		w = 0
 		ansline = ""
 		line=line.replace(" !","\t!")
 		line=line.replace(" ?","\t?")
 		words = line.split(" ")
-		for word in words:
+		flush()
+		while(len(words)>0):
+			word = words.pop(0)
 			word = word.replace("\t"," ")
-			lw = len(word)
-			
-			w2 = w + lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
-			
-			#print("W2:",repr(word),w2,"Pixels+space:",pixels_width+spacesize)
-			if w2>pixels_width + spacesize:
+			xlong, xshort = word_width(word)
+			if(w+xshort>pixels_width):
+				if(ansline == ""):
+					cutword,nextword = cut_word(word,pixels_width)
+					#print("Cut:",cutword,"+",nextword)
+					flush()
+					ansline=cutword
+					word = nextword
+				#print("Cut in ",ansline,"+",word)
 				ans.append(ansline)
-				if(lines_height(len(ans))>pixels_height and leave_early):
+				if(lines_height(len(ans)+1)>pixels_height and leave_early):
 					return ans
 				ansline = ""
-				w = lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
-				while(w>pixels_width + spacesize):
-				
-					#print("W:",repr(word),w,"Pixels+space:",pixels_width+spacesize)
-					#bourrin
-					#print(word,w)
-					for index in range(len(word)):
-						#print("Index:",index)
-						word2 = word[:len(word)-index]
-						#print("Word 2:",word2)
-						lw = len(word2)
-						w = lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
-						if(w<=pixels_width+spacesize):
-							ans.append(word2)
-							if(lines_height(len(ans))>pixels_height and leave_early):
-								return ans
-							#print("Appended:",word2)
-							word = word[len(word)-index:]
-							#print("Remains:",word)
-							break
-					lw = len(word)
-					w = lw*font_width + (lw-1)*font_hsep + word.count(" ")*(-font_width-font_hsep+spacesize) + spacesize
-				ansline = word+" "
+				words.insert(0,word)
+				w=0
 			else:
 				ansline+=word+" "
-				w = w2
+				w+=xlong+spacesize
+				
 		ans.append(ansline)
-		if(lines_height(len(ans))>pixels_height and leave_early):
+		if(lines_height(len(ans)+1)>pixels_height and leave_early):
 			return ans
 	return ans
 
@@ -170,21 +221,15 @@ def measure(wrapped_text):
 	measured_width = 0
 	measured_height = 0
 	for index, line in enumerate(wrapped_text):
-		x=0
-		y=index*(font_height+font_vsep)
-		for letter in line:
-			if(letter==" "):
-				x+=spacesize
-			else:
-				x+=font_width+font_hsep
-				measured_width = max(x-font_hsep,measured_width)
-		measured_height = max(measured_height, y+(line!="")*font_height)
+		xlong,xshort=word_width(line)
+		measured_width = max(xshort,measured_width)
+	measured_height = lines_height(len(wrapped_text))
 	return measured_width,measured_height
 
 def draw_text(canvas,wrapped_text):
 	for index, line in enumerate(wrapped_text):
 		x=font_x0
-		y=font_y0+index*(font_height+font_vsep)
+		y=font_y0+index*(FONT_HEIGHT+font_vsep)
 		for letter in line:
 			if(letter==" "):
 				x+=spacesize
@@ -192,23 +237,23 @@ def draw_text(canvas,wrapped_text):
 				char_image = get_char_image(get_char_ascii_index(letter))
 				if(char_image!=None):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
-				x+=font_width+font_hsep
+				x+=FONT_WIDTH+font_hsep
 			if(y>canvas.winfo_height()):
 				break
 
 def load_mini_font():
-	font_width = 2
+	FONT_WIDTH = 2
 	font_hsep = 1
-	font_height = 4
+	FONT_HEIGHT = 4
 	font_vsep = 1
 	font_x0 = 1
 	font_y0 = 1 
 	for x in range(16):
 		for y in range(8):
-			dx = font_x0 + (font_width+font_hsep) * x
-			dy = font_y0 + (font_height+font_vsep) * y
+			dx = font_x0 + (FONT_WIDTH+font_hsep) * x
+			dy = font_y0 + (FONT_HEIGHT+font_vsep) * y
 			characters[x+y*16] = \
-				subimage(fontbase, dx, dy, dx+font_width, dy+font_height)
+				subimage(fontbase, dx, dy, dx+FONT_WIDTH, dy+FONT_HEIGHT)
 				
 
 				
@@ -279,16 +324,15 @@ def create_textwindow(root,textvariable):
 			
 		textarea.previous_text = textarea.get('1.0', 'end-1c')
 		
-		def save_text():
+		def save_text_loop():
 			current_text = textarea.get('1.0', 'end-1c')
 			if(textarea.previous_text != current_text):
 				with io.open(sample_text_file,'w',encoding='utf8') as f:
 					f.write(current_text)
 			textwindow.title("Text input")
-			textarea.after(5000, save_text)
+			textarea.after(5000, save_text_loop)
 				
-		textarea.after(5000, save_text)
-			
+		textarea.after(5000, save_text_loop)
 	elif(textwindow!=None and textwindow.winfo_exists()):
 		dx = textwindow.winfo_rootx()-textwindow.winfo_x()
 		#print(dx)
@@ -296,9 +340,119 @@ def create_textwindow(root,textvariable):
 		textwindow.important.focus_force()
 		textwindow.geometry(("+%d+%d")%(
 			root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+
+def create_optionswindow(root,size_callback):
+	global optionswindow
+	
+	if optionswindow == None or not optionswindow.winfo_exists():
+		optionswindow = Toplevel(root)
+		optionswindow.title("Change options")
+		mainframe = Frame(optionswindow, bg="gray10")
+		mainframe.pack(fill=BOTH, expand=YES)
+		
+		leftframe = Frame(mainframe)
+		leftframe.pack(side=LEFT)
+		rightframe = Frame(mainframe)
+		rightframe.pack(side=RIGHT)
+		
+		Label(leftframe,text="Horizontal separation").pack(side=TOP)
+		hsepvar = IntVar(value=font_hsep)
+		Spinbox(leftframe,textvariable = hsepvar,width=3, from_=0, to=64).pack(side=TOP)
+		def hsepfun(*args):
+			global font_hsep
+			font_hsep = hsepvar.get()
+			size_callback()
+		hsepvar.trace("w",hsepfun)
+		
+		Label(rightframe,text="Vertical separation").pack(side=TOP)
+		vsepvar = IntVar(value=font_vsep)
+		Spinbox(rightframe,textvariable = vsepvar,width=3, from_=0, to=64).pack(side=TOP)
+		def vsepfun(*args):
+			global font_vsep
+			font_vsep = vsepvar.get()
+			size_callback()
+		vsepvar.trace("w",vsepfun)
+		
+		Label(leftframe,text="Border width").pack(side=TOP)
+		x0var = IntVar(value=font_x0)
+		Spinbox(leftframe,textvariable = x0var,width=3, from_=0, to=64).pack(side=TOP)
+		def x0fun(*args):
+			global font_x0
+			font_x0 = x0var.get()
+			size_callback()
+		x0var.trace("w",x0fun)
+		
+		Label(rightframe,text="Border height").pack(side=TOP)
+		y0var = IntVar(value=font_y0)
+		Spinbox(rightframe,textvariable = y0var,width=3, from_=0, to=64).pack(side=TOP)
+		def y0fun(*args):
+			global font_y0
+			font_y0 = y0var.get()
+			size_callback()
+		y0var.trace("w",y0fun)
+		
+		Label(rightframe,text="Space character width").pack(side=TOP)
+		spvar = IntVar(value=spacesize)
+		Spinbox(rightframe,textvariable = spvar,width=3, from_=0, to=64).pack(side=TOP)
+		def spfun(*args):
+			global spacesize
+			spacesize = spvar.get()
+			size_callback()
+		spvar.trace("w",spfun)
+		
+		Label(leftframe,text="Force capitalization").pack(side=TOP)
+		capvar = IntVar(value=allcaps)
+		Spinbox(leftframe,textvariable = capvar,width=3, from_=0, to=1).pack(side=TOP)
+		def capfun(*args):
+			global allcaps
+			allcaps = capvar.get()
+			size_callback()
+		capvar.trace("w",capfun)
+		
+		Button(rightframe,text="Save options",command=save_options).pack(side=TOP)
+		def load_and_update(*args):
+			save_options()
+			size_callback()
+		Button(leftframe,text="Load options",command=load_and_update).pack(side=TOP)
+		"""
+		Label(rightframe,text="AAAAAAAAA").pack()
+		XXXXX = IntVar(value=YYYYYY)
+		Spinbox(rightframe,textvariable = XXXXX,width=3, from_=0, to=10).pack()
+		def XXXXXfun(*args):
+			YYYYYY = XXXXX.get()
+			change_callback()
+		XXXXX.trace("w",change_callback)
+		
+		Label(leftframe,text="AAAAAAAAA").pack()
+		XXXXX = IntVar(value=YYYYYY)
+		Spinbox(leftframe,textvariable = XXXXX,width=3, from_=0, to=10).pack()
+		def XXXXXfun(*args):
+			YYYYYY = XXXXX.get()
+			change_callback()
+		XXXXX.trace("w",change_callback)"""
+	
+			
+		
+		dx = 8
+		optionswindow.geometry(("+%d+%d")%(
+			root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+	elif(optionswindow!=None and optionswindow.winfo_exists()):
+		dx = optionswindow.winfo_rootx()-optionswindow.winfo_x()
+		#print(dx)
+		#flush()
+		optionswindow.focus_force()
+		optionswindow.geometry(("+%d+%d")%(
+			root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+		
 		
 if(__name__ == "__main__"):
 	load_mini_font()
+	try:
+		#canvaswidth,canvasheight=
+		load_options()
+	except Exception as e:
+		print(e)
+		pass
 	canvaswidth = DEF_CANVAS[0]
 	canvasheight = DEF_CANVAS[0]
 	
@@ -358,17 +512,25 @@ Is it not proof that I possess the stone of life?""".upper())
 	heightBox = Spinbox(coordsFrame, textvariable = heightVar,width=4, from_=4, to=512)
 	heightBox.pack(side=LEFT)
 	
-	#The boxes are only active when Fit is disabled
 	def sizechange_callback(*args):
 		mycanvas.config(width=widthVar.get()+font_x0*2, height=heightVar.get()+font_y0*2)
+		#print("Set canvas to",widthVar.get()+font_x0*2,heightVar.get()+font_y0*2)
 		change_callback()
 	
 	widthVar.trace("w",sizechange_callback)
 	heightVar.trace("w",sizechange_callback)
 	
 	def fitToText():
-		w,h = measure(wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False))
-		print(w,h)
+		wrapped_text = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
+		w,h = measure(wrapped_text)
+		#print("Measure answer:",w,h)
+		#print("Widthbox:",widthBox.get(),heightBox.get())
+		#print("Canvas:",mycanvas.winfo_width(),mycanvas.winfo_height())
+		#try:
+		#	print("Text:",wrapped_text[0])
+		#except:
+		#	pass
+		#flush()
 		widthVar.set(w)
 		heightVar.set(h)
 	#FIT button
@@ -379,7 +541,6 @@ Is it not proof that I possess the stone of life?""".upper())
 	
 	def screenshotCallback():
 		filename = screenshot(mycanvas,"Screenshot")
-		
 		print("Captured image "+filename)
 		flush()	
 	
@@ -406,7 +567,10 @@ Is it not proof that I possess the stone of life?""".upper())
 	#[TODO] other font
 	#[TODO] all caps or not
 	
-	optionsButton = Button(bottomFrame,text="☼")
+	def optionsbuttonCallback():
+		create_optionswindow(root,sizechange_callback)
+		
+	optionsButton = Button(bottomFrame,text="☼",command=optionsbuttonCallback)
 	optionsButton.pack(side=RIGHT)
 	CreateToolTip(optionsButton,"Open Options window")
 	
