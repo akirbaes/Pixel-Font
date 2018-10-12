@@ -32,8 +32,8 @@ font_hsep = 0
 
 font_height = 4
 font_vsep = 1
-font_x0 = 0
-font_y0 = 0
+font_x0 = 1
+font_y0 = 1
 	
 textwindow = None
 	
@@ -183,8 +183,8 @@ def measure(wrapped_text):
 
 def draw_text(canvas,wrapped_text):
 	for index, line in enumerate(wrapped_text):
-		x=0
-		y=index*(font_height+font_vsep)
+		x=font_x0
+		y=font_y0+index*(font_height+font_vsep)
 		for letter in line:
 			if(letter==" "):
 				x+=spacesize
@@ -360,7 +360,7 @@ Is it not proof that I possess the stone of life?""".upper())
 	
 	#The boxes are only active when Fit is disabled
 	def sizechange_callback(*args):
-		mycanvas.config(width=widthVar.get(), height=heightVar.get())
+		mycanvas.config(width=widthVar.get()+font_x0*2, height=heightVar.get()+font_y0*2)
 		change_callback()
 	
 	widthVar.trace("w",sizechange_callback)
