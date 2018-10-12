@@ -18,7 +18,7 @@ root.geometry("160x160")
 DEF_CANVAS = (64,64)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
-DEF_BUTTONSROW = 13
+DEF_BUTTONSROW = 16
 
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
@@ -373,7 +373,7 @@ Is it not proof that I possess the stone of life?""".upper())
 		heightVar.set(h)
 	#FIT button
 	fitButton = Button(coordsFrame,text="Fit",command=fitToText)
-	fitButton.pack(side=LEFT)
+	fitButton.pack(side=RIGHT)
 	CreateToolTip(fitButton,"Fit the canvas to the text")
 	
 	
