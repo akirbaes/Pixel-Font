@@ -368,9 +368,13 @@ def create_optionswindow(root,size_callback):
 		mainframe.pack(fill=BOTH, expand=YES)
 		
 		leftframe = Frame(mainframe)
-		leftframe.pack(side=LEFT)
+		leftframe.pack(side=LEFT,fill=BOTH, expand=YES)
 		rightframe = Frame(mainframe)
-		rightframe.pack(side=RIGHT)
+		rightframe.pack(side=RIGHT,fill=BOTH, expand=YES)
+		#leftframe = Frame(leftframeall)
+		#leftframe.pack(side=TOP)
+		#rightframe = Frame(rightframeall)
+		#rightframe.pack(side=TOP)
 		
 		Label(leftframe,text="Horizontal separation").pack(side=TOP)
 		hsepvar = IntVar(value=font_hsep)
@@ -419,18 +423,27 @@ def create_optionswindow(root,size_callback):
 		
 		Label(leftframe,text="Force capitalization").pack(side=TOP)
 		capvar = IntVar(value=allcaps)
-		Spinbox(leftframe,textvariable = capvar,width=3, from_=0, to=1).pack(side=TOP)
+		Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
 		def capfun(*args):
 			global allcaps
 			allcaps = capvar.get()
 			size_callback()
 		capvar.trace("w",capfun)
 		
-		Button(rightframe,text="Save options",command=save_options).pack(side=TOP)
+		Button(rightframe,text="Save options",command=save_options).pack(side=BOTTOM)
 		def load_and_update(*args):
-			save_options()
+			load_options()
 			size_callback()
-		Button(leftframe,text="Load options",command=load_and_update).pack(side=TOP)
+			hsepvar.set(font_hsep)
+			vsepvar.set(font_vsep)
+			x0var.set(font_x0)
+			y0var.set(font_y0)
+			spvar.set(spacesize)
+			capvar.set(allcaps)
+
+		undobutton = Button(leftframe,text="Undo changes",command=load_and_update)
+		undobutton.pack(side=BOTTOM)
+		CreateToolTip(undobutton,"Load last saved options")
 		"""
 		Label(rightframe,text="AAAAAAAAA").pack()
 		XXXXX = IntVar(value=YYYYYY)
@@ -483,7 +496,7 @@ if(__name__ == "__main__"):
 A more abject appearance you will not find.
 
 I have fallen countless times before your troops, and yet I am here.
-Is it not proof that I possess the stone of life?""".upper())
+Is it not proof that I possess the stone of life?""")
 	
 	
 	myframe = Frame(root, bg="gray10")
@@ -536,6 +549,11 @@ Is it not proof that I possess the stone of life?""".upper())
 	
 	widthVar.trace("w",sizechange_callback)
 	heightVar.trace("w",sizechange_callback)
+	
+	drag = Label(coordsFrame,text="(?)")
+	drag.pack(side=LEFT)
+	CreateToolTip(drag,"Drag on the grey area to change the size of the drawing box")
+	
 	
 	def fitToText():
 		wrapped_text = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
