@@ -86,17 +86,25 @@ def subimage(sheet, l, t, r, b):
 
 def screenshot(canvas,text):
 	#https://stackoverflow.com/questions/47653748/performing-imagegrab-on-tkinter-screen
-	box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
 	#print(box)
 	flush()
 	time = str(datetime.datetime.now()).replace(":","-")
 	image_name = text[:10]+"_"+time+".png"
-	shot = ImageGrab.grab()
-	#print(dir(shot))
-	#print("W1=",shot.width)
-	shot=shot.crop(box)
-	#print("W2=",shot.width)
+	
+	#Avoid the weird window that appears during the imagegrab
+	rx,ry = root.winfo_x(), root.winfo_y()
+	ww = root.winfo_screenwidth()
+	rw = root.winfo_width()
+	root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
+	root.update_idletasks()
+		
+	box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
+	shot = ImageGrab.grab(box)
 	shot.save(image_name)
+	
+	root.geometry(("+%d+%d")%(rx , ry))
+	root.update_idletasks()
+	
 	return image_name
 	
 try:
@@ -111,9 +119,18 @@ try:
 		win32clipboard.CloseClipboard()
 	
 	def copy_screenshot_to_clipboard(canvas):
-		box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
+		#Avoid the weird window that appears during the imagegrab
+		rx,ry = root.winfo_x(), root.winfo_y()
+		ww = root.winfo_screenwidth()
+		rw = root.winfo_width()
+		root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
+		root.update_idletasks()
 		
+		box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
 		shot = ImageGrab.grab(box)
+		
+		root.geometry(("+%d+%d")%(rx , ry))
+		root.update_idletasks()
 		
 		output = io.BytesIO()
 		shot.convert("RGB").save(output, "BMP")
