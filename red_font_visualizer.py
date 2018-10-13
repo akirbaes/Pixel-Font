@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
+import json
 from tkinter import *
 import tkinter as tk
 import datetime
@@ -19,12 +20,16 @@ DEF_CANVAS = (64,64)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
 DEF_BUTTONSROW = 16
+FONT_TYPES = "MiniRed_Mono.png", "MiniRed_WideMNW.png"
+MONO = 0
+WIDE = 1
 
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
 
-characters = [None]*(16*8)
-fontbase = PhotoImage(file="minired_sadface.png")
+MONOcharacters = [None]*(16*8)
+WIDEcharacters = [None]*(16*8)
+ALLcharacters = [MONOcharacters,WIDEcharacters]
 textwindow = None
 optionswindow = None
 
@@ -38,6 +43,7 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
+current_font = WIDE 
 	
 def save_options(): #current_height, current_width):
 	f = open("options.ini","w")
@@ -47,6 +53,7 @@ def save_options(): #current_height, current_width):
 	f.write(str(font_x0)  +"\n")
 	f.write(str(font_y0)  +"\n")
 	f.write(str(allcaps)  +"\n")
+	f.write(str(current_font)  +"\n")
 	f.close()
 	#file.write(current_height)
 	#file.write(current_width)
@@ -57,7 +64,8 @@ def load_options():
 	       spacesize,\
 	       font_x0  ,\
 	       font_y0  ,\
-		   allcaps
+		   allcaps	,\
+		   current_font
 	
 	f = open("options.ini","r")
 	data = f.readlines()
@@ -75,6 +83,7 @@ def load_options():
 	font_x0   = newdata.pop(0)
 	font_y0   = newdata.pop(0)
 	allcaps   = newdata.pop(0)
+	current_font   = newdata.pop(0)
 	#return newdata.pop(0), newdata.pop(0)
 	
 def subimage(sheet, l, t, r, b):
@@ -154,9 +163,9 @@ def get_char_ascii_index(character):
 	return allchars.find(character)
 	
 def get_char_image(charnum):
-	if(charnum<=0 or charnum>=len(characters)):
+	if(charnum<=0 or charnum>=len(ALLcharacters[current_font])):
 		return None
-	return characters[charnum]
+	return ALLcharacters[current_font][charnum]
 
 def lines_height(lines):
 	return lines*FONT_HEIGHT+(max(0,lines-1))*font_vsep
@@ -167,7 +176,7 @@ def word_width(word):
 		if(char == " "):
 			xlong+=spacesize
 		else:
-			xlong+=FONT_WIDTH+font_hsep
+			xlong+=get_char_width(char)+font_hsep
 	xshort = xlong
 	for i in range(len(word)-1,-1,-1):
 		if(word[i]==" "):
@@ -254,25 +263,40 @@ def draw_text(canvas,wrapped_text):
 				char_image = get_char_image(get_char_ascii_index(letter))
 				if(char_image!=None):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
-				x+=FONT_WIDTH+font_hsep
+				x+=get_char_width(letter)+font_hsep
 			if(y>canvas.winfo_height()):
 				break
 
-def load_mini_font():
+def load_mini_fonts():
+	#Load MONO
 	FONT_WIDTH = 2
 	font_hsep = 1
 	FONT_HEIGHT = 4
 	font_vsep = 1
 	font_x0 = 1
 	font_y0 = 1 
+	fontbase = PhotoImage(file=FONT_TYPES[MONO])
 	for x in range(16):
 		for y in range(8):
 			dx = font_x0 + (FONT_WIDTH+font_hsep) * x
 			dy = font_y0 + (FONT_HEIGHT+font_vsep) * y
-			characters[x+y*16] = \
+			MONOcharacters[x+y*16] = \
 				subimage(fontbase, dx, dy, dx+FONT_WIDTH, dy+FONT_HEIGHT)
-				
+	
+	#Load WIDE
+	fontbase = PhotoImage(file=FONT_TYPES[WIDE])
+	
+	with io.open("WIDEcharpossizes.json",'r',encoding='utf8') as f:
+		posdict = json.load(f)
+	for key in posdict:
+		x,y,w,h = posdict[key]
+		
+		id = get_char_ascii_index(key)
+		WIDEcharacters[id] =  \
+			subimage(fontbase, x, y, x+w, y+h)
 
+def get_char_width(character):
+	return ALLcharacters[current_font][get_char_ascii_index(character)].width()
 				
 def load_special_chars(frame,textarea):
 	filename = "button_special_chars.txt"
@@ -421,6 +445,7 @@ def create_optionswindow(root,size_callback):
 			size_callback()
 		spvar.trace("w",spfun)
 		
+		
 		Label(leftframe,text="Force capitalization").pack(side=TOP)
 		capvar = IntVar(value=allcaps)
 		Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
@@ -429,6 +454,15 @@ def create_optionswindow(root,size_callback):
 			allcaps = capvar.get()
 			size_callback()
 		capvar.trace("w",capfun)
+		
+		Label(leftframe,text="Font type").pack(side=TOP)
+		ftvar = StringVar(value = FONT_TYPES[current_font])
+		Spinbox(leftframe,textvariable = ftvar, width=22, values=FONT_TYPES).pack(side=TOP)
+		def ftfun(*args):
+			global current_font
+			current_font = FONT_TYPES.index(ftvar.get())
+			size_callback()
+		ftvar.trace("w",ftfun)
 		
 		Button(rightframe,text="Save options",command=save_options).pack(side=BOTTOM)
 		def load_and_update(*args):
@@ -440,6 +474,7 @@ def create_optionswindow(root,size_callback):
 			y0var.set(font_y0)
 			spvar.set(spacesize)
 			capvar.set(allcaps)
+			ftvar.set(FONT_TYPES[current_font])
 
 		undobutton = Button(leftframe,text="Undo changes",command=load_and_update)
 		undobutton.pack(side=BOTTOM)
@@ -476,7 +511,7 @@ def create_optionswindow(root,size_callback):
 		
 		
 if(__name__ == "__main__"):
-	load_mini_font()
+	load_mini_fonts()
 	try:
 		#canvaswidth,canvasheight=
 		load_options()
@@ -484,7 +519,7 @@ if(__name__ == "__main__"):
 		print(e)
 		pass
 	canvaswidth = DEF_CANVAS[0]
-	canvasheight = DEF_CANVAS[0]
+	canvasheight = DEF_CANVAS[1]
 	
 	windowText = StringVar()
 	#Default temporary text
