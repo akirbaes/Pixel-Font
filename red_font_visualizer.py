@@ -455,14 +455,6 @@ def create_optionswindow(root,size_callback):
 			size_callback()
 		capvar.trace("w",capfun)
 		
-		Label(leftframe,text="Font type").pack(side=TOP)
-		ftvar = StringVar(value = FONT_TYPES[current_font])
-		Spinbox(leftframe,textvariable = ftvar, width=22, values=FONT_TYPES).pack(side=TOP)
-		def ftfun(*args):
-			global current_font
-			current_font = FONT_TYPES.index(ftvar.get())
-			size_callback()
-		ftvar.trace("w",ftfun)
 		
 		Button(rightframe,text="Save options",command=save_options).pack(side=BOTTOM)
 		def load_and_update(*args):
@@ -479,6 +471,17 @@ def create_optionswindow(root,size_callback):
 		undobutton = Button(leftframe,text="Undo changes",command=load_and_update)
 		undobutton.pack(side=BOTTOM)
 		CreateToolTip(undobutton,"Load last saved options")
+		
+		
+		Label(leftframe,text="Font type:").pack(side=BOTTOM)
+		ftvar = StringVar(value = FONT_TYPES[current_font])
+		Spinbox(rightframe,textvariable = ftvar, width=22, values=FONT_TYPES).pack(side=BOTTOM)
+		def ftfun(*args):
+			global current_font
+			current_font = FONT_TYPES.index(ftvar.get())
+			size_callback()
+		ftvar.trace("w",ftfun)
+		
 		"""
 		Label(rightframe,text="AAAAAAAAA").pack()
 		XXXXX = IntVar(value=YYYYYY)
