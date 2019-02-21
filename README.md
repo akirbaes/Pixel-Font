@@ -5,11 +5,15 @@ Load a pixel font sheet easily and start typing text with it.
 /fonts contains the character sheets in .png and their corresponding character content in .txt
 
 >>**badlydrawn**.png  
+
 >![Badly drawn pixel font](fonts/badlydrawn.png)
 
 >>**badlydrawn**[chars].txt  
->ABCDEFGHIJKLM  
-NOPQRSTUVWXYZ
+
+>~~~~  
+ABCDEFGHIJKLM  
+NOPQRSTUVWXYZ  
+~~~~
 
 font_to_data.py then generates a .json with the sheet infos (positions, sizes of each character)
 
@@ -34,7 +38,7 @@ badlydrawn is just a testing font that's badly drawn
 
 µRed_mono is a 2x4 font
 
-![2x4 mini ascii font](fonts/µRed_mono.png) ![3x4 mini ascii font](fonts/µRed_wide.png)
+>![2x4 mini ascii font](fonts/µRed_mono.png) ![3x4 mini ascii font](fonts/µRed_wide.png)
 
 It uses RGB subpixels to represent letters with mostly only two pixels of width.
 
@@ -44,7 +48,7 @@ Due to the right pixels always being red or empty, two letter can be adjacent (n
 
 One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels). Interesting for hiding messages in 3D textures or messing with people. Real-life magnifying glass can be considered as an alternative for zooming!
 
-![Example of output text](images/hideous_screenshot.png)
+>![Example of output text](images/hideous_screenshot.png)
 
 There are two versions of the font: a MONO that's consistently 2 pixels wide, 
 and a WIDE version that uses three pixels for letters that are difficult to distinguish otherwise 
@@ -56,8 +60,8 @@ It was also tweaked and extended over time (wide variation).
 
 ----
 
-![Font formula 16](fonts/Formula_16.png) ![Font formula](fonts/Formula.png)
-
 Formula and Formula16 are just fonts substituting the english alphabet with my personnal alphabet. It's a dumb substitution. 
+
+>![Font formula 16](fonts/Formula_16.png) ![Font formula](fonts/Formula.png)
 
 The letters were imagined by deforming hand-written letter (the loop of the e becomes a spike, etc.), or using other mental shortcuts to try to create something opaque to understanding at first look but easy to remember.
