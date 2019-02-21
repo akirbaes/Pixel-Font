@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 import json
+import os
 from tkinter import *
 import tkinter as tk
 import datetime
@@ -10,40 +11,55 @@ flush = sys.stdout.flush
 from tkinter import font
 root = Tk()
 sample_text_file = "sample_text.txt"
-root.title("Minifont viewer")
-root.iconbitmap("2x8_MINI_RED_FONT_EDITOR_ICON.ico")
-root.configure(background="black")
+root.title("Bitmap font viewer")
+root.iconbitmap("appicon.ico")
+root.configure(background="grey")
 
-root.geometry("160x160")
+root.geometry("300x160")
 #DEF_FRAME = (128,128)
-DEF_CANVAS = (64,64)
+DEF_CANVAS = (256,64)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
 DEF_BUTTONSROW = 16
-FONT_TYPES = "MiniRed_Mono.png", "MiniRed_WideMNW.png"
+FONT_TYPES = "µRed_mono.png", "µRed_wide.png", "Formula_16.png", "Formula.png", "maxred.png", "badlydrawn.png"
 MONO = 0
 WIDE = 1
+FORMULA16 = 2
 
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
 
-MONOcharacters = [None]*(16*8)
-WIDEcharacters = [None]*(16*8)
-ALLcharacters = [MONOcharacters,WIDEcharacters]
+ALLcharacters = []
+
 textwindow = None
 optionswindow = None
 
+
+def update_font(font_id = None):
+	if(font_id==None):
+		font_id = current_font
+	global FONT_WIDTH, FONT_HEIGHT, FONT_BACKGROUND
+	FONT_WIDTH = ALLcharacters[current_font]["width"]
+	FONT_HEIGHT = ALLcharacters[current_font]["height"]
+	def rgb_to_hex(r,g,b):
+		return (("#%02x%02x%02x") % (r, g, b))
+	FONT_BACKGROUND = rgb_to_hex(*ALLcharacters[current_font]["background"])
+	
+#Nonwithstanding existing .ini file
 FONT_WIDTH = 2
 FONT_HEIGHT = 4
-
-#Nonwithstanding existing .ini file
+FONT_BACKGROUND = "black"
 spacesize = 1
 font_hsep = 0
 font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
-current_font = WIDE 
+current_font = FORMULA16 
+def font_name(id=None):
+	if(id==None):
+		id=current_font
+	return FONT_TYPES[id]
 	
 def save_options(): #current_height, current_width):
 	f = open("options.ini","w")
@@ -66,7 +82,6 @@ def load_options():
 	       font_y0  ,\
 		   allcaps	,\
 		   current_font
-	
 	f = open("options.ini","r")
 	data = f.readlines()
 	f.close()
@@ -84,6 +99,7 @@ def load_options():
 	font_y0   = newdata.pop(0)
 	allcaps   = newdata.pop(0)
 	current_font   = newdata.pop(0)
+	update_font()
 	#return newdata.pop(0), newdata.pop(0)
 	
 def subimage(sheet, l, t, r, b):
@@ -99,7 +115,7 @@ def screenshot(canvas,text):
 	flush()
 	time = str(datetime.datetime.now()).replace(":","-")
 	image_name = text[:10]+"_"+time+".png"
-	
+	image_name = os.path.join("images",image_name)
 	#Avoid the weird window that appears during the imagegrab
 	rx,ry = root.winfo_x(), root.winfo_y()
 	ww = root.winfo_screenwidth()
@@ -154,18 +170,17 @@ except:
 	copy_screenshot_to_clipboard = None
 	
 	
-filename = "special_chars.txt"
-allchars = ""
-with io.open(filename,'r',encoding='utf8') as f:
-	allchars = f.read().replace("\n","")
+allchars = "UNINITIALISED"
+def reload_chars():
+	global allchars
+	filename = font_name()[:-4]+"[chars].txt"
+	with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
+		allchars = f.read().replace("\n","")
+
+reload_chars()
 	
-def get_char_ascii_index(character):
-	return allchars.find(character)
-	
-def get_char_image(charnum):
-	if(charnum<=0 or charnum>=len(ALLcharacters[current_font])):
-		return None
-	return ALLcharacters[current_font][charnum]
+def get_char_image(char):
+	return ALLcharacters[current_font].get(char,None)
 
 def lines_height(lines):
 	return lines*FONT_HEIGHT+(max(0,lines-1))*font_vsep
@@ -260,7 +275,7 @@ def draw_text(canvas,wrapped_text):
 			if(letter==" "):
 				x+=spacesize
 			else:
-				char_image = get_char_image(get_char_ascii_index(letter))
+				char_image = get_char_image(letter)
 				if(char_image!=None):
 					canvas.create_image(x, y, anchor=NW, image=char_image)
 				x+=get_char_width(letter)+font_hsep
@@ -268,35 +283,35 @@ def draw_text(canvas,wrapped_text):
 				break
 
 def load_mini_fonts():
-	#Load MONO
-	FONT_WIDTH = 2
-	font_hsep = 1
-	FONT_HEIGHT = 4
-	font_vsep = 1
-	font_x0 = 1
-	font_y0 = 1 
-	fontbase = PhotoImage(file=FONT_TYPES[MONO])
-	for x in range(16):
-		for y in range(8):
-			dx = font_x0 + (FONT_WIDTH+font_hsep) * x
-			dy = font_y0 + (FONT_HEIGHT+font_vsep) * y
-			MONOcharacters[x+y*16] = \
-				subimage(fontbase, dx, dy, dx+FONT_WIDTH, dy+FONT_HEIGHT)
 	
-	#Load WIDE
-	fontbase = PhotoImage(file=FONT_TYPES[WIDE])
-	
-	with io.open("WIDEcharpossizes.json",'r',encoding='utf8') as f:
-		posdict = json.load(f)
-	for key in posdict:
-		x,y,w,h = posdict[key]
+	for FONTNAME in FONT_TYPES:
 		
-		id = get_char_ascii_index(key)
-		WIDEcharacters[id] =  \
-			subimage(fontbase, x, y, x+w, y+h)
-
+		#Load WIDE
+		fontbase = PhotoImage(file=os.path.join("fonts",FONTNAME))
+		fontdata = dict()
+		with io.open(os.path.join("fonts",FONTNAME[:-4]+"[posiz].json"),'r',encoding='utf8') as f:
+			posdict = json.load(f)
+			
+		for key in posdict:
+			if(len(key)==1):
+				#character
+				x,y,w,h = posdict[key]
+				fontdata[key] = subimage(fontbase, x, y, x+w, y+h)#or y+posdict["height"] not much difference
+			else:
+				#background, width, height
+				fontdata[key]=posdict[key]
+		ALLcharacters.append(fontdata)
+		s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
+		#print(FONTNAME,s)	
+	update_font()
+	#print(current_font,font_name(),ALLcharacters[current_font]["background"])
+	
 def get_char_width(character):
-	return ALLcharacters[current_font][get_char_ascii_index(character)].width()
+	try:
+		return ALLcharacters[current_font][character].width()
+	except Exception as e:
+		#print("Could not find character in font",font_name())
+		return ALLcharacters[current_font]["width"]
 				
 def load_special_chars(frame,textarea):
 	filename = "button_special_chars.txt"
@@ -307,7 +322,7 @@ def load_special_chars(frame,textarea):
 	charsframe.pack(fill=BOTH, expand=YES)
 	counter = 0;
 	for character in text:
-		if(get_char_image(get_char_ascii_index(character))!=None):
+		if(get_char_image(character)!=None):
 			def char_command(current_char):
 				def place_char():
 					textarea.insert(INSERT,current_char)
@@ -411,7 +426,7 @@ def create_optionswindow(root,size_callback):
 		
 		Label(rightframe,text="Vertical separation").pack(side=TOP)
 		vsepvar = IntVar(value=font_vsep)
-		Spinbox(rightframe,textvariable = vsepvar,width=3, from_=0, to=64).pack(side=TOP)
+		Spinbox(rightframe,textvariable = vsepvar,width=3, from_=-1, to=64).pack(side=TOP)
 		def vsepfun(*args):
 			global font_vsep
 			font_vsep = vsepvar.get()
@@ -467,6 +482,7 @@ def create_optionswindow(root,size_callback):
 			spvar.set(spacesize)
 			capvar.set(allcaps)
 			ftvar.set(FONT_TYPES[current_font])
+			
 
 		undobutton = Button(leftframe,text="Undo changes",command=load_and_update)
 		undobutton.pack(side=BOTTOM)
@@ -474,11 +490,16 @@ def create_optionswindow(root,size_callback):
 		
 		
 		Label(leftframe,text="Font type:").pack(side=BOTTOM)
-		ftvar = StringVar(value = FONT_TYPES[current_font])
-		Spinbox(rightframe,textvariable = ftvar, width=22, values=FONT_TYPES).pack(side=BOTTOM)
+		ftvar = StringVar(value = font_name())
+		sb = Spinbox(rightframe, width=22, values=FONT_TYPES,textvariable = ftvar)
+		sb.pack(side=BOTTOM)
+		sb.delete(0,"end")
+		sb.insert(0,font_name()) #for some reason, doesn't get the right default value
+		#print(sb.get())
 		def ftfun(*args):
 			global current_font
 			current_font = FONT_TYPES.index(ftvar.get())
+			update_font()
 			size_callback()
 		ftvar.trace("w",ftfun)
 		
@@ -540,7 +561,7 @@ Is it not proof that I possess the stone of life?""")
 	myframe = Frame(root, bg="gray10")
 	myframe.pack(fill=BOTH, expand=YES)
 	mycanvas = Canvas(myframe,
-		width=canvaswidth, height=canvasheight, bg="black", highlightthickness=0)
+		width=canvaswidth, height=canvasheight, bg=FONT_BACKGROUND, highlightthickness=0)
 	
 	#https://stackoverflow.com/questions/18736465/how-to-center-a-tkinter-widget
 	mycanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -581,8 +602,16 @@ Is it not proof that I possess the stone of life?""")
 	heightBox.pack(side=LEFT)
 	
 	def sizechange_callback(*args):
-		mycanvas.config(width=widthVar.get()+font_x0*2, height=heightVar.get()+font_y0*2)
-		#print("Set canvas to",widthVar.get()+font_x0*2,heightVar.get()+font_y0*2)
+		w, h = widthVar.get()+font_x0*2, heightVar.get()+font_y0*2
+		mycanvas.config(width=w, height=h, background=FONT_BACKGROUND)
+		dx = root.winfo_rootx()-root.winfo_x()
+		bottom = bottomFrame.winfo_height()+coordsFrame.winfo_height()
+		
+		#if(root.winfo_width()<w or root.winfo_height()-bottom<h):
+		fit = ("%dx%d")%(max(160,w+20),bottom+h+20)
+		#print("Fit to",fit)
+		root.geometry(fit)
+			
 		change_callback()
 	
 	widthVar.trace("w",sizechange_callback)
@@ -606,11 +635,12 @@ Is it not proof that I possess the stone of life?""")
 		#flush()
 		widthVar.set(w)
 		heightVar.set(h)
+		
+		
 	#FIT button
 	fitButton = Button(coordsFrame,text="Fit",command=fitToText)
 	fitButton.pack(side=RIGHT)
 	CreateToolTip(fitButton,"Fit the canvas to the text")
-	
 	
 	def screenshotCallback():
 		filename = screenshot(mycanvas,"Screenshot")
@@ -699,7 +729,10 @@ Is it not proof that I possess the stone of life?""")
 	myframe.bind("<Button-1>", click)
 	myframe.bind("<ButtonRelease-1>", unclick)
 	
-	sizechange_callback()
+	root.update_idletasks()
+	fitToText()
+	#sizechange_callback()
+	
 	
 	sys.stdout.flush()
 	root.mainloop()
