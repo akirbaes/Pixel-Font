@@ -4,13 +4,13 @@ Load a pixel font sheet easily and start typing text with it.
 
 /fonts contains the character sheets in .png and their corresponding character content in .txt
 
->>**badlydrawn**.png  
+>**badlydrawn**.png  
 
 >![Badly drawn pixel font](fonts/badlydrawn.png)
 
->>**badlydrawn**[chars].txt  
+>**badlydrawn**[chars].txt  
 
->~~~~  
+~~~~
 ABCDEFGHIJKLM  
 NOPQRSTUVWXYZ  
 ~~~~
