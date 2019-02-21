@@ -4,20 +4,16 @@ Load a pixel font sheet easily and start typing text with it.
 
 /fonts contains the character sheets in .png and their corresponding character content in .txt
 
->>**badlydrawn**.png
-
+>>**badlydrawn**.png  
 >![Badly drawn pixel font](fonts/badlydrawn.png)
 
->>**badlydrawn**[chars].txt
-
->ABCDEFGHIJKLM
-
->NOPQRSTUVWXYZ
+>>**badlydrawn**[chars].txt  
+>ABCDEFGHIJKLM  
+NOPQRSTUVWXYZ
 
 font_to_data.py then generates a .json with the sheet infos (positions, sizes of each character)
 
->>**badlydrawn**[posiz].json
-
+>>**badlydrawn**[posiz].json  
 >Position of each character on the image, background color, max width, max height
 
 font_visualizer.py in the root allows to load those fonts and use them to show text.
@@ -48,7 +44,7 @@ Due to the right pixels always being red or empty, two letter can be adjacent (n
 
 One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels). Interesting for hiding messages in 3D textures or messing with people. Real-life magnifying glass can be considered as an alternative for zooming!
 
-![Example of output text](hideous_screenshot.png)
+![Example of output text](images/hideous_screenshot.png)
 
 There are two versions of the font: a MONO that's consistently 2 pixels wide, 
 and a WIDE version that uses three pixels for letters that are difficult to distinguish otherwise 
@@ -60,7 +56,7 @@ It was also tweaked and extended over time (wide variation).
 
 ----
 
-![Font formula 16](fonts/Formula16.png) ![Font formula](fonts/Formula.png)
+![Font formula 16](fonts/Formula_16.png) ![Font formula](fonts/Formula.png)
 
 Formula and Formula16 are just fonts substituting the english alphabet with my personnal alphabet. It's a dumb substitution. 
 
