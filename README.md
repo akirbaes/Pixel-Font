@@ -1,15 +1,13 @@
-#Bitmap Pixel Font Visualizer
+# Bitmap Pixel Font Visualizer
 
 Load a pixel font sheet easily and start typing text with it.
 
 /fonts contains the character sheets in .png and their corresponding character content in .txt
 
 >**badlydrawn**.png  
-
->![Badly drawn pixel font](fonts/badlydrawn.png)
+![Badly drawn pixel font](fonts/badlydrawn.png)
 
 >**badlydrawn**[chars].txt  
-
 ~~~~
 ABCDEFGHIJKLM  
 NOPQRSTUVWXYZ  
@@ -17,8 +15,8 @@ NOPQRSTUVWXYZ
 
 font_to_data.py then generates a .json with the sheet infos (positions, sizes of each character)
 
->>**badlydrawn**[posiz].json  
->Position of each character on the image, background color, max width, max height
+>**badlydrawn**[posiz].json  
+Position of each character on the image, background color, max width, max height
 
 font_visualizer.py in the root allows to load those fonts and use them to show text.
 
@@ -26,7 +24,7 @@ font_visualizer.py in the root allows to load those fonts and use them to show t
 
 The text is customizable and there are many options to change.
 
->![Visual of the options window](optionswindow_screenshot.png)
+>![Visual of the options window](images/optionswindow_screenshot.png)
 
 ----
 
@@ -42,7 +40,7 @@ badlydrawn is just a testing font that's badly drawn
 
 It uses RGB subpixels to represent letters with mostly only two pixels of width.
 
-The name "MiniRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letters cover just the leftmost subpixel. The font works on a black background. While the negative (cyan) is possible I find it harder to read.
+The name "µRed" (MicroRed) / "MiniRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letters cover just the leftmost subpixel. The font works on a black background. While the negative (cyan) is possible I find it harder to read.
 
 Due to the right pixels always being red or empty, two letter can be adjacent (no pixel separation) and still be ~readable.
 
@@ -56,7 +54,7 @@ like M, N, W...
 
 *The µRed font (previously called MiniRed) was originally created around 2016 by Akira BAES.*
 
-It was also tweaked and extended over time (wide variation).
+It was tweaked and extended over time (wide variation).
 
 ----
 
