@@ -110,5 +110,15 @@ def generate_data(fontimage_file):
 	return char_pos_size
 		
 if __name__ == "__main__":
-	for filename in files:
-		generate_data(filename)
+	import sys
+	if(len(sys.argv)>1):
+		try:
+			generate_data(sys.argv[1])
+			input("Done! Press any key...")
+		except Exception as e:
+			print(e)
+			input("Error! Press any key...")
+			raise(e)
+	else:
+		for filename in files:
+			generate_data(filename)
