@@ -42,7 +42,7 @@ It uses RGB subpixels to represent letters with mostly only two pixels of width.
 
 The name "µRed" (MicroRed) / "MiniRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letters cover just the leftmost subpixel. The font works on a black background. While the negative (cyan) is possible I find it harder to read.
 
-Due to the rightmost pixels always being at most red, two letters can be adjacent without pixel separation and still be reasonably readable, since there are still two empty subpixels between the letters. This makes it even more compact!
+Due to the rightmost pixels always being at most red, two letters can be adjacent without pixel separation and still be reasonably readable, since there are still two empty subpixels between the letters. This makes it even more compact! **So in practise, µRed (mono) is actually comparable to a 1x4 font (counting character+separation).**
 
 One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels) especially if the characters are close together. Interesting for hiding messages "in plain sight" or messing with people. Real-life magnifying glass can be considered as an alternative for zooming! Otherwise, you will have to lean closer to your screen which can cause eyes strain.
 
