@@ -317,18 +317,15 @@ def load_special_chars(frame,textarea):
 	filename = "button_special_chars.txt"
 	with io.open(filename,'r',encoding='utf8') as f:
 		text = f.read()
-	
-	charsframe = Frame(frame, bg="gray20")
-	charsframe.pack(fill=BOTH, expand=YES)
-	counter = 0;
-	for character in text:
-		if(get_char_image(character)!=None):
+		
+		charsframe = Frame(frame, bg="gray20")
+		charsframe.pack(fill=BOTH, expand=YES)
+		counter = 0;
+		for character in text:
 			def char_command(current_char):
 				def place_char():
 					textarea.insert(INSERT,current_char)
 					textarea.event_generate("<Key>")
-					#print("Inserted ",ord(current_char))
-					#flush()
 				return place_char
 			counter += 1
 			if(counter > DEF_BUTTONSROW):
