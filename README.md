@@ -28,17 +28,17 @@ The text is customizable and there are many options to change.
 
 ----
 
-The fonts:
+# The fonts
 
-badlydrawn is just a testing font that's badly drawn
+The main purpose of the application was to visualise some special fonts that required using a (colored) bitmap font type (badlydrawn is just a testing font that's badly drawn).
 
 ----
 
-µRed_mono is a 2x4 font
+**µRed** (mono and wide) is a 2x4 ascii colored font
 
 >![2x4 mini ascii font](fonts/µRed_mono.png) ![3x4 mini ascii font](fonts/µRed_wide.png)
 
-It uses RGB subpixels to represent letters with mostly only two pixels of width.
+It uses RGB subpixels to represent letters with mostly only two pixels of width. Hence, it requires a colored bitmap basis.
 
 The name "µRed" (MicroRed) / "MiniRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letters cover just the leftmost subpixel. The font works on a black background. While the negative (cyan) is possible I find it harder to read.
 
@@ -52,13 +52,11 @@ There are two versions of the font: a MONO that's consistently 2 pixels wide,
 and a WIDE version that uses three pixels for letters that are difficult to distinguish otherwise 
 like M, N, W...
 
-*The µRed font (previously called MiniRed) was originally created around 2016 by Akira BAES.*
-
-It was tweaked and extended over time (wide variation).
+The MiniRed (now µRed) was originally created around 2016 by Akira BAES. It's still tweaked and extended over time though.
 
 ----
 
-Formula and Formula16 are just fonts substituting the english alphabet with my personnal alphabet. It's a dumb substitution. 
+**Formula and Formula16** are just fonts substituting the english alphabet with my personnal alphabet. It's a dumb substitution. 
 
 >![Font formula 16](fonts/Formula_16.png) ![Font formula](fonts/Formula.png)
 
