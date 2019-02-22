@@ -94,7 +94,11 @@ def generate_data(fontimage_file):
 	for key in char_pos_size:
 		if(len(key)==1):
 			cx,cy,x0,y0,x1,y1 = char_pos_size[key]
-			char_pos_size[key] = cx+origin_x,cy+origin_y,x1-origin_x+1,y1-origin_y+1
+			if("mono" in fontimage_file):
+				#If mono, all characters must have the same size
+				char_pos_size[key] = cx+origin_x,cy+origin_y,font_width,font_height
+			else:
+				char_pos_size[key] = cx+origin_x,cy+origin_y,x1-origin_x+1,y1-origin_y+1
 	
 	char_pos_size["width"]=font_width
 	char_pos_size["height"]=font_height
