@@ -6,6 +6,9 @@ from PIL import Image
 files = "maxred.png", "µRed_mono.png", "µRed_wide.png", "Formula.png", "Formula_16.png", "badlydrawn.png"
 
 def generate_data(fontimage_file):
+    AUTOALIGN_LEFTMOST = True #Otherwise, will align based on where you put the character in the rectangle
+    if("aligned" in fontimage_file):
+        AUTOALIGN_LEFTMOST=False
     fontimage = Image.open(fontimage_file).convert('RGB')
     image_width, image_height = fontimage.size
 
@@ -65,13 +68,12 @@ def generate_data(fontimage_file):
                 for dx in range(x_sep):
                     pixel = fontimage.getpixel((charx+dx,chary+dy))
                     if(pixel!=background_color):
-                        if("µ" in fontimage_file) and not(pixel[1]==0 and pixel[2]==0 and pixel[0]>1):
-                            #If subpixels, pixels other than red are bigger
-                            dx+=1
                         x0 = min (dx, x0)
                         y0 = min (dy, y0)
-                        x1 = max (dx, x1)
                         y1 = max (dy, y1)
+                        if("µ" in fontimage_file) and not(pixel[1]==0 and pixel[2]==0 and pixel[0]>1):
+                            dx+=1 #If subpixels, pixels other than red are bigger on the right
+                        x1 = max (dx, x1)
             
             #print(character,charx,chary,x1>x0 and y1>y0)
             if(x1>=x0 and y1>=y0):
@@ -104,7 +106,10 @@ def generate_data(fontimage_file):
                 #If mono, all characters must have the same size
                 char_pos_size[key] = cx+origin_x,cy+origin_y,font_width,font_height
             else:
-                char_pos_size[key] = cx+origin_x,cy+origin_y,x1-origin_x+1,y1-origin_y+1
+                if(AUTOALIGN_LEFTMOST):
+                    char_pos_size[key] = cx+x0,cy+origin_y,x1-x0+1,y1-origin_y+1
+                else:
+                    char_pos_size[key] = cx+origin_x,cy+origin_y,x1-origin_x+1,y1-origin_y+1
     
     char_pos_size["width"]=font_width
     char_pos_size["height"]=font_height
@@ -117,6 +122,7 @@ def generate_data(fontimage_file):
     with io.open(fontimage_file[:-4]+"[posiz].json",'r',encoding='utf8') as f:
         newdict = json.load(f)
         
+    char_pos_size["background"]=(64,64,64)
     return char_pos_size
         
 if __name__ == "__main__":

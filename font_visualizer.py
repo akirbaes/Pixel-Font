@@ -21,7 +21,8 @@ DEF_CANVAS = (256,64)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
 DEF_BUTTONSROW = 16
-FONT_TYPES = "µRed_mono.png", "µRed_wide.png", "Formula_16.png", "Formula.png", "maxred.png", "badlydrawn.png"
+FONT_TYPES = "µRed_mono.png", "µRed_wide.png", "normal_handwriting.png", "normal_handwriting_aligned.png"
+#"Formula_16.png", "Formula.png", "maxred.png", "badlydrawn.png", "fake_cursive_ancestor.png", "fake_cursive_descendant.png", "script_ancestor_alphabet_crop_small.png", "script_new_alpha_1bp_small.png", "normal_handwritting_crop_v3_small.png"
 MONO = 0
 WIDE = 1
 FORMULA16 = 2
