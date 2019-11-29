@@ -60,6 +60,10 @@ font_x0 = 1
 font_y0 = 1
 allcaps = 0
 current_font = 0 
+superpose_missing_accents = False
+accent_vertical_gap = 1
+fill_missing_with_unidecode = True
+missing_character_character = "?"
 def font_name(id=None):
     if(id==None):
         id=current_font
@@ -278,6 +282,10 @@ def measure(wrapped_text):
     measured_height = lines_height(len(wrapped_text))
     return measured_width,measured_height
 
+try:    from unidecode import unidecode
+except Exception as e: print(e)
+#https://stackoverflow.com/questions/517923/what-is-the-best-way-to-remove-accents-in-a-python-unicode-string
+
 def draw_text(canvas,wrapped_text):
     for index, line in enumerate(wrapped_text):
         x=font_x0
@@ -287,6 +295,16 @@ def draw_text(canvas,wrapped_text):
                 x+=spacesize
             else:
                 char_image = get_char_image(letter)
+                if(char_image==None and fill_missing_with_unidecode):
+                    try: 
+                        letter=unidecode(letter)
+                        char_image = get_char_image(letter)
+                        print(letter,char_image)
+                    except Exception as e: 
+                        print(e)
+                if(char_image==None):
+                    letter=missing_character_character
+                    char_image = get_char_image(letter)
                 if(char_image!=None):
                     canvas.create_image(x, y, anchor=NW, image=char_image)
                 x+=get_char_width(letter)+font_hsep
@@ -326,7 +344,7 @@ def load_mini_fonts():
     
 def get_char_width(character):
     try:
-        return ALLcharacters[current_font][character].width()
+        return get_char_image(character).width()
     except Exception as e:
         #print("Could not find character in font",font_name())
         return ALLcharacters[current_font]["width"]
