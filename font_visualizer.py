@@ -21,11 +21,11 @@ DEF_CANVAS = (256,64)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
 DEF_BUTTONSROW = 16
-FONT_TYPES = "µRed_mono.png", "µRed_wide.png", "normal_handwriting.png", "normal_handwriting_aligned.png"
-#"Formula_16.png", "Formula.png", "maxred.png", "badlydrawn.png", "fake_cursive_ancestor.png", "fake_cursive_descendant.png", "script_ancestor_alphabet_crop_small.png", "script_new_alpha_1bp_small.png", "normal_handwritting_crop_v3_small.png"
-MONO = 0
-WIDE = 1
-FORMULA16 = 2
+
+FONT_TYPES = []
+for file in os.listdir("fonts"):
+	if file.endswith(".png"):
+		FONT_TYPES.append(file)
 
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
@@ -56,7 +56,7 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
-current_font = FORMULA16 
+current_font = 0 
 def font_name(id=None):
 	if(id==None):
 		id=current_font
@@ -77,11 +77,11 @@ def save_options(): #current_height, current_width):
 	
 def load_options():
 	global font_hsep,\
-	       font_vsep,\
-	       spacesize,\
-	       font_x0  ,\
-	       font_y0  ,\
-		   allcaps	,\
+		   font_vsep,\
+		   spacesize,\
+		   font_x0  ,\
+		   font_y0  ,\
+		   allcaps  ,\
 		   current_font
 	f = open("options.ini","r")
 	data = f.readlines()
@@ -284,26 +284,33 @@ def draw_text(canvas,wrapped_text):
 				break
 
 def load_mini_fonts():
-	
+	working_fonts=[]
 	for FONTNAME in FONT_TYPES:
 		
 		#Load WIDE
 		fontbase = PhotoImage(file=os.path.join("fonts",FONTNAME))
 		fontdata = dict()
-		with io.open(os.path.join("fonts",FONTNAME[:-4]+"[posiz].json"),'r',encoding='utf8') as f:
-			posdict = json.load(f)
-			
-		for key in posdict:
-			if(len(key)==1):
-				#character
-				x,y,w,h = posdict[key]
-				fontdata[key] = subimage(fontbase, x, y, x+w, y+h)#or y+posdict["height"] not much difference
-			else:
-				#background, width, height
-				fontdata[key]=posdict[key]
-		ALLcharacters.append(fontdata)
-		s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
-		#print(FONTNAME,s)	
+		try:
+			with io.open(os.path.join("fonts",FONTNAME[:-4]+"[posiz].json"),'r',encoding='utf8') as f:
+				posdict = json.load(f)
+				
+			for key in posdict:
+				if(len(key)==1):
+					#character
+					x,y,w,h = posdict[key]
+					fontdata[key] = subimage(fontbase, x, y, x+w, y+h)#or y+posdict["height"] not much difference
+				else:
+					#background, width, height
+					fontdata[key]=posdict[key]
+			ALLcharacters.append(fontdata)
+			s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
+			working_fonts.append(FONTNAME)
+			#print(FONTNAME,s)	
+		except Exception as e:
+			print("Could not load",FONTNAME,"due to:")
+			print(e)
+			print("-"*10)
+	FONT_TYPES[:]=working_fonts
 	update_font()
 	#print(current_font,font_name(),ALLcharacters[current_font]["background"])
 	
@@ -415,7 +422,7 @@ def create_optionswindow(root,size_callback):
 		
 		Label(leftframe,text="Horizontal separation").pack(side=TOP)
 		hsepvar = IntVar(value=font_hsep)
-		Spinbox(leftframe,textvariable = hsepvar,width=3, from_=0, to=64).pack(side=TOP)
+		Spinbox(leftframe,textvariable = hsepvar,width=3, from_=-64, to=64).pack(side=TOP)
 		def hsepfun(*args):
 			global font_hsep
 			font_hsep = hsepvar.get()
@@ -424,7 +431,7 @@ def create_optionswindow(root,size_callback):
 		
 		Label(rightframe,text="Vertical separation").pack(side=TOP)
 		vsepvar = IntVar(value=font_vsep)
-		Spinbox(rightframe,textvariable = vsepvar,width=3, from_=-1, to=64).pack(side=TOP)
+		Spinbox(rightframe,textvariable = vsepvar,width=3, from_=-64, to=64).pack(side=TOP)
 		def vsepfun(*args):
 			global font_vsep
 			font_vsep = vsepvar.get()
@@ -451,7 +458,7 @@ def create_optionswindow(root,size_callback):
 		
 		Label(rightframe,text="Space character width").pack(side=TOP)
 		spvar = IntVar(value=spacesize)
-		Spinbox(rightframe,textvariable = spvar,width=3, from_=0, to=64).pack(side=TOP)
+		Spinbox(rightframe,textvariable = spvar,width=3, from_=0, to=128).pack(side=TOP)
 		def spfun(*args):
 			global spacesize
 			spacesize = spvar.get()
