@@ -63,7 +63,8 @@ def font_name(id=None):
     return FONT_TYPES[id]
     
 def save_options(): #current_height, current_width):
-    f = open("options.ini","w")
+    filename="fonts"+os.sep+font_name()[:-4]
+    f = open(filename+".ini","w")
     f.write(str(font_hsep)+"\n")
     f.write(str(font_vsep)+"\n")
     f.write(str(spacesize)+"\n")
@@ -75,7 +76,7 @@ def save_options(): #current_height, current_width):
     #file.write(current_height)
     #file.write(current_width)
     
-def load_options():
+def load_options(filename="options",silent=True):
     global font_hsep,\
            font_vsep,\
            spacesize,\
@@ -83,24 +84,30 @@ def load_options():
            font_y0  ,\
            allcaps  ,\
            current_font
-    f = open("options.ini","r")
-    data = f.readlines()
-    f.close()
-    newdata = []
-    #print(data)
-    for x in data:
-        try:
-            newdata.append(int(x))
-        except:
-            print(x,"could not be read")
-    font_hsep = newdata.pop(0)
-    font_vsep = newdata.pop(0)
-    spacesize = newdata.pop(0)
-    font_x0   = newdata.pop(0)
-    font_y0   = newdata.pop(0)
-    allcaps   = newdata.pop(0)
-    current_font   = newdata.pop(0)
-    update_font()
+    try:
+        f = open(filename+".ini","r")
+        data = f.readlines()
+        f.close()
+        newdata = []
+        #print(data)
+        for x in data:
+            try:
+                newdata.append(int(x))
+            except:
+                print(x,"could not be read")
+        font_hsep = newdata.pop(0)
+        font_vsep = newdata.pop(0)
+        spacesize = newdata.pop(0)
+        font_x0   = newdata.pop(0)
+        font_y0   = newdata.pop(0)
+        allcaps   = newdata.pop(0)
+        current_font   = newdata.pop(0)
+        update_font()
+        return True
+    except Exception as e:
+        if not silent: print(e)
+        return False
+        
     #return newdata.pop(0), newdata.pop(0)
     
 def subimage(sheet, l, t, r, b):
@@ -478,7 +485,7 @@ def create_optionswindow(root,size_callback):
         
         Button(rightframe,text="Save options",command=save_options).pack(side=BOTTOM)
         def load_and_update(*args):
-            load_options()
+            load_options("fonts"+os.sep+font_name()[:-4]) #Try to load specific options, otherwise do nothing
             size_callback()
             hsepvar.set(font_hsep)
             vsepvar.set(font_vsep)
@@ -504,6 +511,7 @@ def create_optionswindow(root,size_callback):
         def ftfun(*args):
             global current_font
             current_font = FONT_TYPES.index(ftvar.get())
+            load_and_update() #changing fonts can change the options
             update_font()
             size_callback()
         ftvar.trace("w",ftfun)
@@ -543,7 +551,9 @@ if(__name__ == "__main__"):
     load_mini_fonts()
     try:
         #canvaswidth,canvasheight=
-        load_options()
+        if(not load_options("fonts"+os.sep+font_name()[:-4])):
+            #Try to load specific options, otherwise load default ones
+            load_options(silent=False)
     except Exception as e:
         print(e)
         pass

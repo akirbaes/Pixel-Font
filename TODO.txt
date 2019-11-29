@@ -1,0 +1,15 @@
+•[toggle]force monospace
+    use hsep to fix (alignment? centered so far)
+    size is median. If max allow negative hsep?
+•save settings per-font
+
+
+•find an idea to make window size easier to manage
+
+•fix the screenshot button for big images
+
+•accents: missing accents: ignore, convert to plain, simulate by combining
+    ignore: current option: missing character is not used
+    convert: missing é is turned into e
+        IDEA: maybe editable tables of convertable characters to try (for example - an longer -)
+    combine: only for accents, surimpose ^ with e. Results not guaranteed. Intelligent shift for caps? (fit the lowest pixel to the highest pixel) Center.
