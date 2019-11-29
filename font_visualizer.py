@@ -5,7 +5,10 @@ import os
 from tkinter import *
 import tkinter as tk
 import datetime
-import pyscreenshot as ImageGrab
+try:
+    from PIL import ImageGrab
+except:
+    import pyscreenshot as ImageGrab
 from tk_ToolTip_class101 import CreateToolTip
 flush = sys.stdout.flush
 from tkinter import font
@@ -128,15 +131,15 @@ def screenshot(canvas,text):
     rx,ry = root.winfo_x(), root.winfo_y()
     ww = root.winfo_screenwidth()
     rw = root.winfo_width()
-    root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
-    root.update_idletasks()
+    #root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
+    #root.update_idletasks()
         
     box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
     shot = ImageGrab.grab(box)
     shot.save(image_name)
     
-    root.geometry(("+%d+%d")%(rx , ry))
-    root.update_idletasks()
+    #root.geometry(("+%d+%d")%(rx , ry))
+    #root.update_idletasks()
     
     return image_name
     
@@ -156,14 +159,14 @@ try:
         rx,ry = root.winfo_x(), root.winfo_y()
         ww = root.winfo_screenwidth()
         rw = root.winfo_width()
-        root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
-        root.update_idletasks()
+        #root.geometry(("+%d+%d")%(ww/2+rw/2, ry))
+        #root.update_idletasks()
         
         box = (canvas.winfo_rootx(),canvas.winfo_rooty(),canvas.winfo_rootx()+canvas.winfo_width(),canvas.winfo_rooty() + canvas.winfo_height())
         shot = ImageGrab.grab(box)
         
-        root.geometry(("+%d+%d")%(rx , ry))
-        root.update_idletasks()
+        #root.geometry(("+%d+%d")%(rx , ry))
+        #root.update_idletasks()
         
         output = io.BytesIO()
         shot.convert("RGB").save(output, "BMP")
