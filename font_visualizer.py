@@ -59,8 +59,8 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
-current_font = 0 
-superpose_missing_accents = False
+current_font = 1
+superpose_missing_accents = True
 accent_vertical_gap = 1
 fill_missing_with_unidecode = True
 missing_character_character = "?"
@@ -286,6 +286,55 @@ try:    from unidecode import unidecode
 except Exception as e: print(e)
 #https://stackoverflow.com/questions/517923/what-is-the-best-way-to-remove-accents-in-a-python-unicode-string
 
+letter_bases={
+    "áàâäãå":"a",
+    "ÁÀÂÄÃÅ":"A",
+    "éèêë"  :"e",
+    "ÉÈÊË"  :"E",
+    "íìîï"  :"ı",
+    "ÍÌÎÏ"  :"I",
+    "óòôöõ" :"o",
+    "ÓÒÔÖÕ" :"O",
+    "úùûü"  :"u",
+    "ÚÙÛÜ"  :"U",
+    "ÿ"     :"y",
+    "Ÿ"     :"Y",
+    "ñ"     :"n",
+    "Ñ"     :"N"
+}
+accent_bases={
+"áÁéÉíÍóÓúÚ"    :"´",
+"àÀèÈìÌòÒùÙ"    :"`",
+"âÂêÊîÎôÔûÛ"    :"^",
+"äÄëËïÏöÖüÜÿŸ"  :"¨",
+"åÅ"            :"°",
+"ãÃõÕñÑ"        :"~"
+}
+
+all_accents="áÁéÉíÍóÓúÚàÀèÈìÌòÒùÙâÂêÊîÎôÔûÛäÄëËïÏöÖüÜÿŸåÅãÃõÕñÑ"
+all_accents="ÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜàáâãäåèéêëìíîïñòóôõöùúûüÿŸ"
+#https://www.fonts.com/content/learning/fontology/level-3/signs-and-symbols/accents
+
+def image_top(image):
+    background = tuple(ALLcharacters[current_font]["background"])
+    for j in range(image.height()):
+        for i in range(image.width()):
+            color = tuple(image.get(i,j))
+            if(color!=background):
+                # print(color,background)
+                return j
+    return 0
+    
+def image_bottom(image):
+    background = tuple(ALLcharacters[current_font]["background"])
+    for j in range(image.height()):
+        for i in range(image.width()):
+            color = tuple(image.get(i,image.height()-j-1))
+            if(color!=background):
+                # print(color,background)
+                return image.height()-j
+    return image.height()
+
 def draw_text(canvas,wrapped_text):
     for index, line in enumerate(wrapped_text):
         x=font_x0
@@ -295,13 +344,45 @@ def draw_text(canvas,wrapped_text):
                 x+=spacesize
             else:
                 char_image = get_char_image(letter)
+                if(char_image==None and letter in all_accents and superpose_missing_accents):
+                    try:
+                        letter_base, accent_base = None, None
+                        for key in letter_bases:
+                            if(letter in key):
+                                letter_base=letter_bases[key]
+                                break
+                        for key in accent_bases:
+                            if(letter in key):
+                                accent_base=accent_bases[key]
+                                break
+                        char_image = get_char_image(letter_base) or get_char_image(unidecode(letter_base))
+                        accent_image = get_char_image(accent_base)
+                        if(char_image.width()>accent_image.width()):
+                            letter = unidecode(letter_base)
+                        else:
+                            letter = accent_base
+                        
+                        #print("Accented letter:",letter_base,"+",accent_base)
+                        
+                        #canvas.create_image(x, y, anchor=NW, image=letter_image)
+                        top=image_top(char_image)
+                        bottom = image_bottom(accent_image)
+                        # print("Top:",top," - Bottom:",bottom)
+                        #bottom=accent_image.height()
+                        h_shift = round(float(char_image.width()-accent_image.width())/2)
+                        v_shift = top-bottom-accent_vertical_gap
+                        
+                        # print("Width letter:",get_char_width(letter_base)," - Width accent:",get_char_width(accent_base))
+                        # print("h_shift:",h_shift)
+                        canvas.create_image(x+h_shift, y+v_shift, anchor=NW, image=accent_image)
+                    except Exception as e:
+                        pass
+                        # print("Could not find replacement for accent",letter)
+                        # print(e)
                 if(char_image==None and fill_missing_with_unidecode):
-                    try: 
-                        letter=unidecode(letter)
-                        char_image = get_char_image(letter)
-                        print(letter,char_image)
-                    except Exception as e: 
-                        print(e)
+                    letter=unidecode(letter)
+                    char_image = get_char_image(letter)
+                    # print(letter,char_image)
                 if(char_image==None):
                     letter=missing_character_character
                     char_image = get_char_image(letter)
@@ -346,7 +427,7 @@ def get_char_width(character):
     try:
         return get_char_image(character).width()
     except Exception as e:
-        #print("Could not find character in font",font_name())
+        # print("Could not find character in font",character,font_name())
         return ALLcharacters[current_font]["width"]
                 
 def load_special_chars(frame,textarea):
