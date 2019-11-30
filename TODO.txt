@@ -4,16 +4,16 @@
 
 •find an idea to make window size easier to manage
 
-•accents: missing accents: ignore, convert to plain, simulate by combining
-    ignore: current option: missing character is not used
-    convert: missing é is turned into e
-        IDEA: maybe editable tables of convertable characters to try (for example - an longer -)
-    combine: only for accents, surimpose ^ with e. Results not guaranteed. Intelligent shift for caps? (fit the lowest pixel to the highest pixel) Center.
-    
-    
 •Current replacement for chars is not consistent with the wrapping algorithm
-get_char_image should be going trough the replacements itself 
-get_char_width should call get_chat_image instead of diretly going for the data
+    get_char_image should be going trough the replacements itself 
+    get_char_width should call get_chat_image instead of diretly going for the data
+•Current accents is not consistent with size
   
-Manually replace:
-«»  by " and " (since unidecode turn them into << and >>)
+•maybe editable tables of convertable characters to try 
+    for example 
+        - and longer -
+        «»  by " and " (since unidecode turn them into << and >>)?
+
+•Separate general options (current font, outline) from font-based options
+
+•add the missing options in the GUI and the .ini (two bools and an int)
