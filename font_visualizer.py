@@ -20,7 +20,7 @@ root.configure(background="grey")
 
 root.geometry("300x160")
 #DEF_FRAME = (128,128)
-DEF_CANVAS = (256,64)
+DEF_CANVAS = (640,480)
 DEF_TEXTAREA = (80,5)
 DEF_TEXTWINDOW = (256,256)
 DEF_BUTTONSROW = 16
@@ -488,7 +488,7 @@ def create_textwindow(root,textvariable):
         
         dx = 8
         textwindow.geometry(("+%d+%d")%(
-            root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+            root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()+root.winfo_height()-DEF_TEXTWINDOW[1]))
             
         textwindow.geometry(("%dx%d")%(DEF_TEXTWINDOW[0],DEF_TEXTWINDOW[1]))
             
@@ -509,7 +509,7 @@ def create_textwindow(root,textvariable):
         #flush()
         textwindow.important.focus_force()
         textwindow.geometry(("+%d+%d")%(
-            root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()))
+            root.winfo_x()+root.winfo_width()+2*dx,root.winfo_y()+root.winfo_height()-textwindow.winfo_height()))
 
 def create_optionswindow(root,size_callback):
     global optionswindow
@@ -707,7 +707,7 @@ Is it not proof that I possess the stone of life?""")
     CreateToolTip(wl,"Width")
     widthVar = IntVar()
     widthVar.set(canvaswidth)
-    widthBox = Spinbox(coordsFrame,textvariable = widthVar,width=4, from_=2, to=512)
+    widthBox = Spinbox(coordsFrame,textvariable = widthVar,width=4, from_=2, to=5120)
     widthBox.pack(side=LEFT)
     
     hl = Label(coordsFrame,text="H")
@@ -715,7 +715,7 @@ Is it not proof that I possess the stone of life?""")
     CreateToolTip(hl,"Height")
     heightVar = IntVar()
     heightVar.set(canvasheight)
-    heightBox = Spinbox(coordsFrame, textvariable = heightVar,width=4, from_=4, to=512)
+    heightBox = Spinbox(coordsFrame, textvariable = heightVar,width=4, from_=4, to=5120)
     heightBox.pack(side=LEFT)
     
     def sizechange_callback(*args):
