@@ -63,9 +63,13 @@ The name "µRed" "MicroRed" is based on the small size (maybe the smallest "read
 
 One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels) especially if the characters are close together. Interesting for hiding messages "in plain sight" or messing with people. Real-life magnifying glass can be considered as an alternative for zooming! Otherwise, you will have to lean closer to your screen which can cause eyes strain. Example:
 
-![Example of output text](images/readme/hideous_screenshot.png) ![Example of digitally zoomed text (X2)](images/readme/hideous_zoomed.png)
+![Example of output text](images/readme/hideous_screenshot.png) ![Example of digitally zoomed text (X2)](images/readme/hideous_zoomed.png) >"I am the most hideous creature in the realm. ☺♫"
 
-If you could zoom into it and have it work, this is how it would look:
+If you simply zoom into it, the subpixels will smudge and become unreadable:
+
+![Text zoomed in by scaling the pixels (unreadable)](images/readme/hideous_screenshot.x6.png)
+
+If you could zoom into it while maintaining the subpixels structure, this is how it would look:
 
 ![Text zoomed in by multiplying the subpixels](images/readme/hideous_screenshot.fullpixels_full_color.png)
 
