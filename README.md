@@ -1,6 +1,6 @@
 # Bitmap Pixel Font Visualizer
 
-[Screenshot of the program at 04-12-19](images/readme/program_screenshot_04-12-19.png)
+![Screenshot of the program at 04-12-19](images/readme/program_screenshot_04-12-19.png)
 
 **Load a pixel font sheet easily and start typing text with it.**
 
@@ -66,7 +66,7 @@ One last property is that zooming in the font digitally will render it unreadabl
 
 If you could zoom into it and have it work, this is how it would look:
 
-![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png) ![Text zoomed in by multiplying the subpixels](images/readme/hideous_screenshot.fullpixels_full_color)
+![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png) ![Text zoomed in by multiplying the subpixels](images/readme/hideous_screenshot.fullpixels_full_color.png)
 
 I originally created the µRed (originally MiniRed) around 2016. It's still being tweaked and extended over time. Send me a hello if you use it or if you have a similar idea! (@akirabaes on Twitter)
 
@@ -76,4 +76,4 @@ I originally created the µRed (originally MiniRed) around 2016. It's still bein
 
 This font is based on my handwriting. It was scanned and cut up in pieces. The software can generate accents automatically.
 
-[Showing off the accents capabilities](images/readme/accents_showoff.png)
+![Showing off the accents capabilities](images/readme/accents_showoff.png)
