@@ -67,7 +67,7 @@ One last property is that zooming in the font digitally will render it unreadabl
 
 If you simply zoom into it, the subpixels will smudge and become unreadable:
 
-![Text zoomed in by scaling the pixels (unreadable)](images/readme/hideous_screenshot.x6.png)
+![Text zoomed in by scaling the pixels (unreadable)](images/readme/hideous_screenshot._x6.png)
 
 If you could zoom into it while maintaining the subpixels structure, this is how it would look:
 
