@@ -29,7 +29,7 @@ FONT_TYPES = []
 for file in os.listdir("fonts"):
     if file.endswith(".png"):
         FONT_TYPES.append(file)
-
+print(FONT_TYPES)
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
 
@@ -59,7 +59,7 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
-current_font = 1
+current_font = 0
 superpose_missing_accents = True
 accent_vertical_gap = 1
 fill_missing_with_unidecode = True
@@ -78,7 +78,7 @@ def save_options(): #current_height, current_width):
     f.write(str(font_x0)  +"\n")
     f.write(str(font_y0)  +"\n")
     f.write(str(allcaps)  +"\n")
-    f.write(str(current_font)  +"\n")
+    #f.write(str(current_font)  +"\n")
     f.close()
     #file.write(current_height)
     #file.write(current_width)
@@ -108,7 +108,7 @@ def load_options(filename="options",silent=True):
         font_x0   = newdata.pop(0)
         font_y0   = newdata.pop(0)
         allcaps   = newdata.pop(0)
-        current_font   = newdata.pop(0)
+        #current_font   = newdata.pop(0)
         update_font()
         return True
     except Exception as e:
@@ -188,7 +188,7 @@ except:
 allchars = "UNINITIALISED"
 def reload_chars():
     global allchars
-    filename = font_name()[:-4]+"[chars].txt"
+    filename = font_name()[:-4]+".txt"
     with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
         allchars = f.read().replace("\n","")
 
@@ -377,13 +377,14 @@ def draw_text(canvas,wrapped_text):
                         canvas.create_image(x+h_shift, y+v_shift, anchor=NW, image=accent_image)
                     except Exception as e:
                         pass
-                        # print("Could not find replacement for accent",letter)
-                        # print(e)
+                        #print(e)
                 if(char_image==None and fill_missing_with_unidecode):
+                    # print("Could not find replacement for accent",letter)
                     letter=unidecode(letter)
                     char_image = get_char_image(letter)
                     # print(letter,char_image)
                 if(char_image==None):
+                    #print("Could not find character",letter,"in",ALLcharacters[current_font])
                     letter=missing_character_character
                     char_image = get_char_image(letter)
                 if(char_image!=None):
@@ -400,7 +401,7 @@ def load_mini_fonts():
         fontbase = PhotoImage(file=os.path.join("fonts",FONTNAME))
         fontdata = dict()
         try:
-            with io.open(os.path.join("fonts",FONTNAME[:-4]+"[posiz].json"),'r',encoding='utf8') as f:
+            with io.open(os.path.join("fonts",FONTNAME[:-4]+".json"),'r',encoding='utf8') as f:
                 posdict = json.load(f)
                 
             for key in posdict:
@@ -595,7 +596,7 @@ def create_optionswindow(root,size_callback):
             y0var.set(font_y0)
             spvar.set(spacesize)
             capvar.set(allcaps)
-            ftvar.set(FONT_TYPES[current_font])
+            #ftvar.set(FONT_TYPES[current_font])
             
 
         undobutton = Button(leftframe,text="Undo changes",command=load_and_update)

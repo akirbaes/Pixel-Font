@@ -13,7 +13,7 @@ def generate_data(fontimage_file):
     image_width, image_height = fontimage.size
 
     #INPUT: the characters that appear in the font, in order
-    filename = fontimage_file[:-4]+"[chars].txt"
+    filename = fontimage_file[:-4]+".txt"
     with io.open(filename,'r',encoding='utf8') as f:
         allchars = f.read()
     #print(allchars)
@@ -85,7 +85,8 @@ def generate_data(fontimage_file):
     font_height = 0
     origin_x = float("inf") #top-left of the box regardless of char size
     origin_y = float("inf")
-    
+    #end_x = 0
+    #end_y = 0 #Bottom right of the box regardless of char size
     for key in char_pos_size:
         if(len(key)==1):
             cx,cy,x0,y0,x1,y1 = char_pos_size[key]
@@ -103,8 +104,8 @@ def generate_data(fontimage_file):
         if(len(key)==1):
             cx,cy,x0,y0,x1,y1 = char_pos_size[key]
             if("mono" in fontimage_file):
-                #If mono, all characters must have the same size
-                char_pos_size[key] = cx+origin_x,cy+origin_y,font_width,font_height
+                #If mono, all characters must have the same width
+                char_pos_size[key] = cx+origin_x,cy+origin_y,font_width,y1-origin_y+1
             else:
                 if(AUTOALIGN_LEFTMOST):
                     char_pos_size[key] = cx+x0,cy+origin_y,x1-x0+1,y1-origin_y+1
@@ -117,9 +118,9 @@ def generate_data(fontimage_file):
     import json
     jsonform = json.dumps(char_pos_size,indent=4,separators=(',', ': '))
     #print(repr(jsonform)) 
-    with io.open(fontimage_file[:-4]+"[posiz].json",'w',encoding='utf8') as f:
+    with io.open(fontimage_file[:-4]+".json",'w',encoding='utf8') as f:
         f.write(jsonform)
-    with io.open(fontimage_file[:-4]+"[posiz].json",'r',encoding='utf8') as f:
+    with io.open(fontimage_file[:-4]+".json",'r',encoding='utf8') as f:
         newdict = json.load(f)
         
     char_pos_size["background"]=(64,64,64)

@@ -6,4 +6,4 @@ work
 old
 *.ini
 sample_text.txt
-*[ignore]*
+*ignore*
