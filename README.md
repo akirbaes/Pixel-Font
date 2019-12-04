@@ -15,7 +15,7 @@
 
 - a .txt of the same name with all the characters in the font image (including empty spaces).
 
->**badlydrawn**[chars].txt  
+>**badlydrawn**.txt  
 ~~~~
 ABCDEFGHIJKLM  
 NOPQRSTUVWXYZ  
@@ -23,16 +23,16 @@ NOPQRSTUVWXYZ
 
 Drag the .png on font_to_data.py which then generates a .json with the sheet infos (positions, sizes of each character)
 
->**badlydrawn**[posiz].json  
+>**badlydrawn**.json  
 Contains positions of each character on the image, background color, max width, max height
 
 font_visualizer.py in the root will scan for .png in the /fonts folder and load them. You can then use them to show text!
 
->![Badly drawn text using the pixel font](images/readme/hideous_drawn.png)
+![Badly drawn text using the pixel font](images/readme/hideous_drawn.png)
 
 The text is customizable and there are many options to change. Options are saved per-font!
 
->![Visual of the options window](images/readme/optionswindow_screenshot.png)
+![Visual of the options window](images/readme/optionswindow_screenshot.png)
 
 
 ## Secrets: 
@@ -57,16 +57,17 @@ Variations: **µRed_Mono** has a fixed size of 2x4. **µRed_wide** has a fixed h
 
 The font set uses RGB subpixels to represent letters, so it needs colors to work. The rightmost pixels is always at most red, so two letters can be adjacent without a pixel of separation and still be reasonably readable, since there are still two empty subpixels between the letters. **This makes the mono version as compact as a 1 pixel wide font in practice!**
 
-The name "µRed" "MicroRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letter shapes cover just the leftmost subpixel. The font works on a black background. While the negative (cyan on white background) is possible I find it harder to read.
+The name "µRed" "MicroRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letter shapes cover just the leftmost subpixel. The font works on a black background. While the negative (cyan on white background) is possible I find it harder to read. You can see here what you could see if you could separate the subpixels:
+
+>![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png)
 
 One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels) especially if the characters are close together. Interesting for hiding messages "in plain sight" or messing with people. Real-life magnifying glass can be considered as an alternative for zooming! Otherwise, you will have to lean closer to your screen which can cause eyes strain. Example:
-
 
 ![Example of output text](images/readme/hideous_screenshot.png) ![Example of digitally zoomed text (X2)](images/readme/hideous_zoomed.png)
 
 If you could zoom into it and have it work, this is how it would look:
 
-![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png) ![Text zoomed in by multiplying the subpixels](images/readme/hideous_screenshot.fullpixels_full_color.png)
+![Text zoomed in by multiplying the subpixels](images/readme/hideous_screenshot.fullpixels_full_color.png)
 
 I originally created the µRed (originally MiniRed) around 2016. It's still being tweaked and extended over time. Send me a hello if you use it or if you have a similar idea! (@akirabaes on Twitter)
 
@@ -76,4 +77,4 @@ I originally created the µRed (originally MiniRed) around 2016. It's still bein
 
 This font is based on my handwriting. It was scanned and cut up in pieces. The software can generate accents automatically.
 
-![Showing off the accents capabilities](images/readme/accents_showoff.png)
+>![Showing off the accents capabilities](images/readme/accents_showoff.png)
