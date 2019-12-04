@@ -51,9 +51,9 @@ The main purpose of the application was to visualise some special pixel fonts, i
 
 MicroRed is a 2x4 ascii colored font and probably close to the most compact font possible outside of a 3x3.
 
-Variations: **µRed_Mono** has a fixed size of 2x4. **µRed_wide** has a fixed height of 4, but a variable width to allow for characters like W, M, N, H to be more readable. **µRed_wide_tall** doesn't have a fixed size but allows for more characters and readability.
+Variations: **µRed_Mono** has a fixed size of 2x4. **µRed_wide** has a fixed height of 4, but a variable width to allow for characters like W, M, N, H to be more readable. **µRed_wide_tall** doesn't have a fixed size but allows for more characters and readability. **µCursive** is a cursive-style variation that is somehow very readable.
 
->![2x4 mini ascii font](fonts/µRed_mono.png) ![3x4 mini ascii font](fonts/µRed_wide.png) ![Variable width and height mini ascii font](fonts/µRed_wide_tall.png)
+>![2x4 micro ascii font](images/readme/µRed_mono.png) ![3x4 micro ascii font](images/readme/µRed_wide.png) ![Variable width and height micro ascii font](images/readme/µRed_wide_tall.png) ![Cursive micro ascii font](images/readme/µCursive.png)
 
 The font set uses RGB subpixels to represent letters, so it needs colors to work. The rightmost pixels is always at most red, so two letters can be adjacent without a pixel of separation and still be reasonably readable, since there are still two empty subpixels between the letters. **This makes the mono version as compact as a 1 pixel wide font in practice!**
 
