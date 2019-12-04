@@ -75,6 +75,8 @@ I originally created the µRed (originally MiniRed) around 2016. It's still bein
 
 >![Font of my handwriting](fonts/my_handwriting_black.png) 
 
-This font is based on my handwriting. It was scanned and cut up in pieces. The software can generate accents automatically.
+This font is based on my handwriting. It was scanned and cut up in pieces. 
 
 >![Showing off the accents capabilities](images/readme/accents_showoff.png)
+
+The software can mash together accents automatically if you provide the top part and the bottom part (including a dotless ı).
