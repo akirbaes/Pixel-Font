@@ -51,19 +51,27 @@ The main purpose of the application was to visualise some special pixel fonts, i
 
 MicroRed is a 2x4 ascii colored font and probably close to the most compact font possible outside of a 3x3.
 
-Variations: **µRed_Mono** has a fixed size of 2x4. **µRed_wide** has a fixed height of 4, but a variable width to allow for characters like W, M, N, H to be more readable. **µRed_wide_tall** doesn't have a fixed size but allows for more characters and readability. **µCursive** is a cursive-style variation that is somehow very readable.
+### Variations: 
 
->![2x4 micro ascii font](images/readme/µRed_mono.png) ![3x4 micro ascii font](images/readme/µRed_wide.png) ![Variable width and height micro ascii font](images/readme/µRed_wide_tall.png) ![Cursive micro ascii font](images/readme/µCursive.png)
+|![separator](images/readme/thin_line.png)  ||
+|:-----------------------------------------------------------------|:---------------------------|
+|![2x4 micro ascii font](images/readme/µRed_mono.png)  | **µRed_Mono** has a fixed size of 2x4. |
+|![3x4 micro ascii font](images/readme/µRed_wide.png)    | **µRed_wide** has a fixed height of 4, but a variable width to allow for characters like W, M, N, H to be more readable. |
+|![Variable width and height micro ascii font](images/readme/µRed_wide_tall.png) | **µRed_wide_tall** doesn't have a fixed height. Characters like "g", "p", "q" and "," hang one pixel lower for aestetic purposes. |
+|![Cursive micro ascii font](images/readme/µCursive.png) | **µCursive** is a cursive-style variation that is somehow very readable. |
 
 The font set uses RGB subpixels to represent letters, so it needs colors to work. The rightmost pixels is always at most red, so two letters can be adjacent without a pixel of separation and still be reasonably readable, since there are still two empty subpixels between the letters. **This makes the mono version as compact as a 1 pixel wide font in practice!**
 
 The name "µRed" "MicroRed" is based on the small size (maybe the smallest "readable" font ever?), and the red appearance. The color red appears often  because of how a lot of letter shapes cover just the leftmost subpixel. The font works on a black background. While the negative (cyan on white background) is possible I find it harder to read. You can see here what you could see if you could separate the subpixels:
 
->![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png)
+![MicroRed zoomed in by multiplying the subpixels](images/readme/µRed_wide.fullpixels_full_color.png)
 
-One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels) especially if the characters are close together. Interesting for hiding messages "in plain sight" or messing with people. Real-life magnifying glass can be considered as an alternative for zooming! Otherwise, you will have to lean closer to your screen which can cause eyes strain. Example:
+One last property is that zooming in the font digitally will render it unreadable (due to the subpixels being turned into whole pixels) especially if the characters are close together. Interesting for hiding messages "in plain sight" or messing with people. Real-life magnifying glass can be considered as an alternative for zooming! Otherwise, you will have to lean closer to your screen which can cause eyes strain. 
 
-![Example of output text](images/readme/hideous_screenshot.png) ![Example of digitally zoomed text (X2)](images/readme/hideous_zoomed.png) >"I am the most hideous creature in the realm. ☺♫"
+### Example:
+
+| ![Example of output text](images/readme/hideous_screenshot.png) | `I am the most hideous creature in the realm. ☺♫` <br/> `A more abject appearance you will not find. ☻♪` <br/> `I have fallen countless times, and yet I am here. ▼↓` <br/> `Is it not proof that I possess the stone of life? ♥☼`|
+|:------|:----------|
 
 If you simply zoom into it, the subpixels will smudge and become unreadable:
 
