@@ -69,7 +69,7 @@ def font_name(id=None):
         id=current_font
     return FONT_TYPES[id]
     
-def save_options(): #current_height, current_width):
+def save_font_options(): #current_height, current_width):
     filename="fonts"+os.sep+font_name()[:-4]
     f = open(filename+".ini","w")
     f.write(str(font_hsep)+"\n")
@@ -83,14 +83,13 @@ def save_options(): #current_height, current_width):
     #file.write(current_height)
     #file.write(current_width)
     
-def load_options(filename="options",silent=True):
+def load_font_options(filename="default_options",silent=True):
     global font_hsep,\
            font_vsep,\
            spacesize,\
            font_x0  ,\
            font_y0  ,\
-           allcaps  ,\
-           current_font
+           allcaps
     try:
         f = open(filename+".ini","r")
         data = f.readlines()
@@ -116,7 +115,24 @@ def load_options(filename="options",silent=True):
         return False
         
     #return newdata.pop(0), newdata.pop(0)
+
+def save_current_font():
+    filename = "settings.ini"
+    f = open(filename,"w")
+    f.write(font_name()  +"\n")
+    f.close()
     
+def load_current_font():
+    global current_font
+    filename = "settings.ini"
+    try:
+        f = open(filename,"r")
+        data=f.readline().strip()#[int(x) for x in f.realines()]
+        f.close()
+        current_font = FONT_TYPES.index(data)
+    except Exception as e:
+        print(e)
+
 def subimage(sheet, l, t, r, b):
     #https://stackoverflow.com/questions/16579674/using-spritesheets-in-tkinter
     #print(l,t,r,b)
@@ -586,9 +602,9 @@ def create_optionswindow(root,size_callback):
         capvar.trace("w",capfun)
         
         
-        Button(rightframe,text="Save options",command=save_options).pack(side=BOTTOM)
+        Button(rightframe,text="Save options",command=save_font_options).pack(side=BOTTOM)
         def load_and_update(*args):
-            load_options("fonts"+os.sep+font_name()[:-4]) #Try to load specific options, otherwise do nothing
+            load_font_options("fonts"+os.sep+font_name()[:-4]) #Try to load specific options, otherwise do nothing
             size_callback()
             hsepvar.set(font_hsep)
             vsepvar.set(font_vsep)
@@ -614,6 +630,7 @@ def create_optionswindow(root,size_callback):
         def ftfun(*args):
             global current_font
             current_font = FONT_TYPES.index(ftvar.get())
+            save_current_font()
             load_and_update() #changing fonts can change the options
             update_font()
             size_callback()
@@ -654,9 +671,10 @@ if(__name__ == "__main__"):
     load_mini_fonts()
     try:
         #canvaswidth,canvasheight=
-        if(not load_options("fonts"+os.sep+font_name()[:-4])):
+        load_current_font()
+        if(not load_font_options("fonts"+os.sep+font_name()[:-4])):
             #Try to load specific options, otherwise load default ones
-            load_options(silent=False)
+            load_font_options(silent=False)
     except Exception as e:
         print(e)
         pass
