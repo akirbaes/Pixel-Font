@@ -1,8 +1,13 @@
-•[toggle]force monospace
-    use hsep to fix (alignment? centered so far)
-    size is median. If max allow negative hsep?
-
-•find an idea to make window size easier to manage
+•[toggle]force fixed width
+    use hsep to fix spacing
+    allignments? default to center (center or left - right is same)
+    
+•[toggle]force fixed height (raise low characters)
+    
+•Add GUI elements for
+    [toggle]    superpose_missing_accents = True
+    [int]       accent_vertical_gap = 1
+    [toggle]    fill_missing_with_unidecode = True
 
 •Current replacement for chars is not consistent with the wrapping algorithm
     get_char_image should be going trough the replacements itself 
@@ -14,6 +19,5 @@
         - and longer -
         «»  by " and " (since unidecode turn them into << and >>)?
 
-•Separate general options (current font, outline) from font-based options
-
-•add the missing options in the GUI and the .ini (two bools and an int)
+•wrapping algorithm bug two last characters are joined
+    the last character of each word loses width when it's the only one on the line
