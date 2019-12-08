@@ -240,9 +240,10 @@ def cut_word(word,pixels_width):
             cutoff=i-1
             #print(xshort,word[:cutoff])
             break
+    cutoff=max(cutoff,1)
     return word[:cutoff], word[cutoff:]
     
-def wrap_text(pixels_width, pixels_height, text, leave_early = True):
+def wrap_text(pixels_width, pixels_height, text, leave_early = False):
     #print("Allcaps is:",allcaps)
     if(allcaps==1):
         text = text.upper()
@@ -351,10 +352,24 @@ def image_bottom(image):
                 return image.height()-j
     return image.height()
 
-def draw_text(canvas,wrapped_text):
+def draw_text(canvas,wrapped_text,vscroll=None):
+    if(vscroll==None):
+        top=0
+        bottom=float("inf")
+    else:
+        top,bottom=vscroll.get()
+        top=top*len(wrapped_text)
+        bottom=bottom*len(wrapped_text)
     for index, line in enumerate(wrapped_text):
         x=font_x0
         y=font_y0+index*(FONT_HEIGHT+font_vsep)
+    
+        #if(y>canvas.winfo_height()):
+        #    break #FIND A BETTER WAY TO OPTIMISE THIS
+        """if(index<top):
+            continue
+        if(index>bottom):
+            break"""
         for letter in line:
             if(letter==" "):
                 x+=spacesize
@@ -406,8 +421,6 @@ def draw_text(canvas,wrapped_text):
                 if(char_image!=None):
                     canvas.create_image(x, y, anchor=NW, image=char_image)
                 x+=get_char_width(letter)+font_hsep
-            if(y>canvas.winfo_height()):
-                break
 
 def load_mini_fonts():
     working_fonts=[]
@@ -696,18 +709,29 @@ Is it not proof that I possess the stone of life?""")
     
     myframe = Frame(root, bg="gray10")
     myframe.pack(fill=BOTH, expand=YES)
-    mycanvas = Canvas(myframe,
-        width=canvaswidth, height=canvasheight, bg=FONT_BACKGROUND, highlightthickness=0)
-    
+    canvasframe = Frame(myframe, bg="gray10")
+    mycanvas = Canvas(canvasframe,
+        width=canvaswidth, height=canvasheight, bg=FONT_BACKGROUND, highlightthickness=0, scrollregion=(0,0,canvaswidth,canvasheight))
+        
+    hbar=Scrollbar(myframe,orient=HORIZONTAL)
+    hbar.pack(side=BOTTOM,fill=X)
+    hbar.config(command=mycanvas.xview)
+    vbar=Scrollbar(myframe,orient=VERTICAL)
+    vbar.pack(side=RIGHT,fill=Y)
+    canvasframe.pack(side=LEFT,fill=BOTH, expand=YES)
+    vbar.config(command=mycanvas.yview)
+    mycanvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
     #https://stackoverflow.com/questions/18736465/how-to-center-a-tkinter-widget
     mycanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
-    #mycanvas.pack(fill=BOTH, expand=YES)
+    
+    #mycanvas.pack(side=TOP)
+    #mycanvas.pack(side=LEFT)
     
     mycanvas.current_after = None
     def redraw():
         mycanvas.current_after = None
         mycanvas.delete("all")
-        draw_text(mycanvas,wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get()))
+        draw_text(mycanvas,wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get()),vbar)
     def change_callback(*args):
         if(mycanvas.current_after != None):
             mycanvas.after_cancel(mycanvas.current_after)
@@ -738,13 +762,14 @@ Is it not proof that I possess the stone of life?""")
     heightBox.pack(side=LEFT)
     
     def sizechange_callback(*args):
-        w, h = widthVar.get()+font_x0*2, heightVar.get()+font_y0*2
-        mycanvas.config(width=w, height=h, background=FONT_BACKGROUND)
+        w, h2 = widthVar.get()+font_x0*2, heightVar.get()+font_y0*2
+        bottom = bottomFrame.winfo_height()+coordsFrame.winfo_height()+hbar.winfo_height()
+        h=min(h2,root.winfo_screenheight()-root.winfo_rooty()-bottom-20)
+        mycanvas.config(width=w, height=h, background=FONT_BACKGROUND, scrollregion=(0,0,w,h2))
         dx = root.winfo_rootx()-root.winfo_x()
-        bottom = bottomFrame.winfo_height()+coordsFrame.winfo_height()
         
         #if(root.winfo_width()<w or root.winfo_height()-bottom<h):
-        fit = ("%dx%d")%(max(160,w+20),bottom+h+20)
+        fit = ("%dx%d")%(max(160,w+20+vbar.winfo_width()),bottom+h+20)
         #print("Fit to",fit)
         root.geometry(fit)
             
@@ -769,8 +794,8 @@ Is it not proof that I possess the stone of life?""")
         #except:
         #    pass
         #flush()
-        widthVar.set(w)
-        heightVar.set(h)
+        widthVar.set(w)#min(w,root.winfo_screenwidth()-root.winfo_width()-root.winfo_x()+mycanvas.winfo_width()))
+        heightVar.set(h)#min(h,root.winfo_screenheight()-root.winfo_height()-root.winfo_y()+mycanvas.winfo_height()))
         
         
     #FIT button
@@ -860,10 +885,10 @@ Is it not proof that I possess the stone of life?""")
             myframe.previous_pos = (x,y)
             widthVar.set(widthVar.get()+dx)
             heightVar.set(heightVar.get()+dy)
-    myframe.previous_pos = None
-    myframe.bind("<B1-Motion>", changesize)
-    myframe.bind("<Button-1>", click)
-    myframe.bind("<ButtonRelease-1>", unclick)
+    canvasframe.previous_pos = None
+    canvasframe.bind("<B1-Motion>", changesize)
+    canvasframe.bind("<Button-1>", click)
+    canvasframe.bind("<ButtonRelease-1>", unclick)
     
     root.update_idletasks()
     fitToText()
