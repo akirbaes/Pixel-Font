@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+import sys, os
+#https://stackoverflow.com/questions/24835155/pyw-and-pythonw-does-not-run-under-windows-7
+if sys.executable.endswith("pythonw.exe"):
+  sys.stdout = open(os.devnull, "w");
+  sys.stderr = open(os.path.join(os.getenv("TEMP"), "stderr-"+os.path.basename(sys.argv[0])), "w")
 import io
 import json
 import os
@@ -29,7 +34,7 @@ FONT_TYPES = []
 for file in os.listdir("fonts"):
     if file.endswith(".png"):
         FONT_TYPES.append(file)
-print(FONT_TYPES)
+#print(FONT_TYPES)
 font12 = font.Font(family='Arial', size=12)
 font12 = 'TkFixedFont'
 
