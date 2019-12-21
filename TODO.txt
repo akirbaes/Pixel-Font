@@ -1,3 +1,5 @@
+•Align: left, right, center, _expand_
+
 •[toggle]force fixed width
     use hsep to fix spacing
     allignments? default to center (center or left - right is same)
@@ -21,3 +23,7 @@
 
 •wrapping algorithm bug two last characters are joined
     the last character of each word loses width when it's the only one on the line
+    
+Subpixel fonts:
+•Alternating line background coloration?
+•Column show?
