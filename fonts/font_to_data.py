@@ -3,7 +3,6 @@ from PIL import Image
 #INPUT: filename of the characters list
 #there must exist a FILENAME.XXX image and a FILENAME[chars].txt file containing the characters represented 
 #(pad with spaces if a line doesn't go until the end)
-files = "maxred.png", "µRed_mono.png", "µRed_wide.png", "Formula.png", "Formula_16.png", "badlydrawn.png"
 
 def generate_data(fontimage_file):
     AUTOALIGN_LEFTMOST = True #Otherwise, will align based on where you put the character in the rectangle
@@ -54,7 +53,9 @@ def generate_data(fontimage_file):
     for line in charlines:
         char_horizontal_count=max(char_horizontal_count,len(line))
     x_sep = image_width//char_horizontal_count
-       
+    print("Image of ",image_width,"x",image_height)
+    print("Characters grid:",char_horizontal_count,"x",chars_vertical_count)
+    print("Characters box:",x_sep,"x",y_sep)
     for j, line in enumerate(charlines):
         for i, character in enumerate(line):
             charx = i*x_sep
@@ -137,5 +138,4 @@ if __name__ == "__main__":
             input("Error! Press any key...")
             raise(e)
     else:
-        for filename in files:
-            generate_data(filename)
+        input("Usage: python font_do_data.py FONTFILE.png\nPress any key...")
