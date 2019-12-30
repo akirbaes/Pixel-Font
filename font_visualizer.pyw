@@ -313,8 +313,8 @@ letter_bases={
     "ÁÀÂÄÃÅ":"A",
     "éèêë"  :"e",
     "ÉÈÊË"  :"E",
-    "íìîï"  :"ı",
-    "ÍÌÎÏ"  :"I",
+    "iíìîï"  :"ı",
+    "İÍÌÎÏ"  :"I",
     "óòôöõ" :"o",
     "ÓÒÔÖÕ" :"O",
     "úùûü"  :"u",
@@ -419,6 +419,8 @@ def draw_text(canvas,wrapped_text,vscroll=None):
                     letter=unidecode(letter)
                     char_image = get_char_image(letter)
                     # print(letter,char_image)
+                if(letter=="I" and get_char_image("İ")!=None):
+                    char_image = get_char_image("İ")
                 if(char_image==None):
                     #print("Could not find character",letter,"in",ALLcharacters[current_font])
                     letter=missing_character_character
