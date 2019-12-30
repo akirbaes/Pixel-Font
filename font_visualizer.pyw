@@ -10,6 +10,7 @@ import os
 from tkinter import *
 import tkinter as tk
 import datetime
+import traceback
 try:
     from PIL import ImageGrab
 except:
@@ -17,6 +18,7 @@ except:
 from tk_ToolTip_class101 import CreateToolTip
 flush = sys.stdout.flush
 from tkinter import font
+import font_to_data
 root = Tk()
 sample_text_file = "sample_text.txt"
 root.title("Bitmap font viewer")
@@ -436,26 +438,45 @@ def load_mini_fonts():
         #Load WIDE
         fontbase = PhotoImage(file=os.path.join("fonts",FONTNAME))
         fontdata = dict()
-        try:
-            with io.open(os.path.join("fonts",FONTNAME[:-4]+".json"),'r',encoding='utf8') as f:
-                posdict = json.load(f)
-                
-            for key in posdict:
-                if(len(key)==1):
-                    #character
-                    x,y,w,h = posdict[key]
-                    fontdata[key] = subimage(fontbase, x, y, x+w, y+h)#or y+posdict["height"] not much difference
+        posdict_generated = False
+        tries = 0
+        while tries < 2:
+            tries +=1
+            try:
+                with io.open(os.path.join("fonts",FONTNAME[:-4]+".json"),'r',encoding='utf8') as f:
+                    posdict = json.load(f)
+                    
+                for key in posdict:
+                    if(len(key)==1):
+                        #character
+                        x,y,w,h = posdict[key]
+                        fontdata[key] = subimage(fontbase, x, y, x+w, y+h)#or y+posdict["height"] not much difference
+                    else:
+                        #background, width, height
+                        fontdata[key]=posdict[key]
+                ALLcharacters.append(fontdata)
+                s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
+                working_fonts.append(FONTNAME)
+                tries = 2
+                #print(FONTNAME,s)    
+            except Exception as e:
+                if(posdict_generated):
+                    print("Could not load",FONTNAME,"due to:")
+                    print(e)
+                    #traceback.print_exc()
+                    print("-"*10)
                 else:
-                    #background, width, height
-                    fontdata[key]=posdict[key]
-            ALLcharacters.append(fontdata)
-            s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
-            working_fonts.append(FONTNAME)
-            #print(FONTNAME,s)    
-        except Exception as e:
-            print("Could not load",FONTNAME,"due to:")
-            print(e)
-            print("-"*10)
+                    try:
+                        print("New font detected:")
+                        font_to_data.generate_data("fonts"+os.sep+FONTNAME)
+                        print("Generated",FONTNAME[:-4]+".json")
+                        posdict_generated = True
+                    except Exception as e:
+                        print("Could not generate font data for",FONTNAME,", is the descriptive .txt missing?")
+                        print(e)
+                        traceback.print_exc()
+                        print("-"*10)
+                    #Generate the json the first time the font is loaded
     FONT_TYPES[:]=working_fonts
     update_font()
     #print(current_font,font_name(),ALLcharacters[current_font]["background"])
