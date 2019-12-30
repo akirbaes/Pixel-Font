@@ -4,21 +4,26 @@
 
 **Load a pixel font sheet easily and start typing text with it.**
 
+Download the executable: [Pixel Font Vizualizer.zip](https://github.com/akirbaes/Pixel-Font/releases)
+
 /fonts contains the character sheets in .png and the data to display it in .json
 
 ## What's needed:
 
-- the font's image with all characters spaced out evently.
+- the font's image with all characters spaced out evenly.
 
->**badlydrawn**.png  
-![Badly drawn pixel font](fonts/badlydrawn.png)
+>**tekitou_gold**.png  
+![Gold-looking pixel font](images/readme/tekitou_gold.png)
 
-- a .txt of the same name with all the characters in the font image (including empty spaces).
+- a .txt of the same name with all the characters in the font image in the right place.
 
->**badlydrawn**.txt  
+>**tekitou_gold**.txt  
 ~~~~
-ABCDEFGHIJKLM  
-NOPQRSTUVWXYZ  
+ABCDEFGHİJ
+KLMNOPQRST
+UVWXYZ
+,.!?()'
+´`^¨I
 ~~~~
 
 Drag the .png on font_to_data.py which then generates a .json with the sheet infos (positions, sizes of each character)
@@ -28,7 +33,7 @@ Contains positions of each character on the image, background color, max width, 
 
 font_visualizer.py in the root will scan for .png in the /fonts folder and load them. You can then use them to show text!
 
-![Badly drawn text using the pixel font](images/readme/hideous_drawn.png)
+![Text using the pixel font](images/readme/gold_pangrams.png)
 
 The text is customizable and there are many options to change. Options are saved per-font!
 
@@ -93,4 +98,4 @@ This font is based on my handwriting. It was scanned and cut up in pieces.
 
 >![Showing off the accents capabilities](images/readme/accents_showoff.png)
 
-The software can mash together accents automatically if you provide the top part and the bottom part (including a dotless ı).
+The software can mash together accents automatically if you provide the top part and the bottom part. For the accents on the i, you must explicitly provide an image for a dotless ı if you want it to work.
