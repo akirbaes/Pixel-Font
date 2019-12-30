@@ -1,0 +1,8 @@
+abcdefghijklm
+nopqrstuvwxyz
+ABCDEFGHIJKLM
+NOPQRSTUVWXYZ
+0123456789+-*
+<>()[]{}/\   
+´`¨°^'",.?!= 
+|&%$#►◄▲▼    

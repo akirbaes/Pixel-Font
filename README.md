@@ -1,58 +1,101 @@
 # Bitmap Pixel Font Visualizer
 
+### Load a pixel font sheet easily and start typing text with it!
+
 ![Screenshot of the program at 04-12-19](images/readme/program_screenshot_04-12-19.png)
 
-**Load a pixel font sheet easily and start typing text with it.**
+## Download standalone executable: [\[↓\]Pixel Font Vizualizer.zip](https://github.com/akirbaes/Pixel-Font/releases)
 
-Download the executable: [Pixel Font Vizualizer.zip](https://github.com/akirbaes/Pixel-Font/releases)
+Otherwise:
 
-/fonts contains the character sheets in .png and the data to display it in .json
+> pyscreenshot: `pip install pyscreenshot`
+>
+> PIL: `pip install pillow`
+>
+> `python font_visualizer.pyw`
+
+Then just add your fonts to the /fonts folder to use them in the program!
 
 ## What's needed:
 
-- the font's image with all characters spaced out evenly.
+- the font's image (preferably transparent PNG) with all characters spaced out evenly.
 
->**tekitou_gold**.png  
-![Gold-looking pixel font](images/readme/tekitou_gold.png)
+>**tekitou_gold**.png 
+> 
+>![Gold-looking pixel font](images/readme/tekitou_gold.png)
 
 - a .txt of the same name with all the characters in the font image in the right place.
 
 >**tekitou_gold**.txt  
-~~~~
-ABCDEFGHİJ
-KLMNOPQRST
-UVWXYZ
-,.!?()'
-´`^¨I
-~~~~
+>~~~~
+>ABCDEFGHİJ
+>KLMNOPQRST
+>UVWXYZ
+>,.!?()'
+>´`^¨I
+>~~~~
 
-Drag the .png on font_to_data.py which then generates a .json with the sheet infos (positions, sizes of each character)
+### And that's all!
 
->**badlydrawn**.json  
-Contains positions of each character on the image, background color, max width, max height
+font_visualizer.py in the root will scan for .png in the /fonts folder and load them. You can now use them to show text!
 
-font_visualizer.py in the root will scan for .png in the /fonts folder and load them. You can then use them to show text!
-
-![Text using the pixel font](images/readme/gold_pangrams.png)
+>![Pangram texts using the pixel font](images/readme/gold_pangrams.png)
 
 The text is customizable and there are many options to change. Options are saved per-font!
 
 ![Visual of the options window](images/readme/optionswindow_screenshot.png)
 
 
-## Secrets: 
+## Accents
 
-- put "mono" in the file name before sending it to font_to_data.py to force the font to work as a  monospace font. The width would use the widest available character.
+If you provide acute, grave, circumflex, diacritic, tilde accent characters, they can be used to generate accented vowels without your explicit input. However, you have to provide the image of a dotless i (ı) if you want accented i to work correctly.
+
+|Handwriting_accents.txt | Handwriting_accents.png |
+|:--------------------------------------------------------|:---------------------------|
+ | ![Showing the included characters](images/readme/handwriting_accents_parts.png) |  `abcdefghijklm` <br>  `nopqrstuvwxyz`  <br> `ABCDEFGHIJKLM`  <br> `NOPQRSTUVWXYZ`  <br> ``ı^´`¨°~``    |
+
+Result:
+
+>![Showing off the accents capabilities](images/readme/accents_showoff.png)
+
+If you are unhappy with the result, you can still provide the accented characters yourself.
+
+## Other secrets: 
+
+- put "mono" in the file name to force the font to work as a monospace font. The width uses the widest available character.
 
 - the font character size is aligned horizontally based on the leftmost and rightmost pixel for each character. If you want some control over the alignment, put "aligned" in the file name to align based on the pixel accross all characters that is the most on the left.
+
+- the .json file of your font's name is automatically generated the first time you use it. It contains all the positions of your characters (x,y,w,h), and the background color. You can edit it if you still feel that the automatic cropping failed.
+
+
 
 ----
 
 # Notable fonts
 
-The main purpose of the application was to visualise some special pixel fonts, including colored bitmap fonts.
+The main purpose of the application was to visualise custom-made pixel fonts. Here are some of my creations:
 
-## **MicroRed** (also µRed)
+
+## **My handwriting**
+
+>![Font of my handwriting](fonts/my_handwriting_v2.png) 
+
+This font is based on my handwriting. It was scanned and cut up in pieces. 
+
+## **Dancing font**
+
+>![Animated font of my handwriting](images/readme/dancing_font.gif)
+
+Three separate handwritten fonts scanned and aligned to make an animation. My program doesn't actually take in account animation, so they are effectively three fonts with shared proportions.
+
+## **Future Cipher**
+
+>![Font of my cipher](fonts/futurescript_25_bold.png) 
+
+A basic replacement cipher based on deformations of latin script.
+
+## **MicroRed** (shortened to µRed)
 
 MicroRed is a 2x4 ascii colored font and probably close to the most compact font possible outside of a 3x3.
 
@@ -88,14 +131,3 @@ If you could zoom into it while maintaining the subpixels structure, this is how
 
 I'm not the first (nor the last) to play with the idea. [Examples: Militext](https://news.ycombinator.com/item?id=18702900), [TinyFont](https://mrl.nyu.edu/~perlin/homepage2006/tinyfont/), etc. I originally created the ascii 2x4 mono red font around 2016 (based on the file's date on my old computer). I was planning to debut it in a game, then time passed... The font is still being tweaked and extended over time with more characters and better readability in mind. The cursive version is a recent addition. 
 
-
-
-## **My handwriting**
-
->![Font of my handwriting](fonts/my_handwriting_black.png) 
-
-This font is based on my handwriting. It was scanned and cut up in pieces. 
-
->![Showing off the accents capabilities](images/readme/accents_showoff.png)
-
-The software can mash together accents automatically if you provide the top part and the bottom part. For the accents on the i, you must explicitly provide an image for a dotless ı if you want it to work.

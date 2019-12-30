@@ -212,8 +212,11 @@ allchars = "UNINITIALISED"
 def reload_chars():
     global allchars
     filename = font_name()[:-4]+".txt"
-    with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
-        allchars = f.read().replace("\n","")
+    try:
+        with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
+            allchars = f.read().replace("\n","")
+    except Exception as e:
+        print(e)
 
 reload_chars()
     
