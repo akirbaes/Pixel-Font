@@ -208,8 +208,8 @@ except:
     copy_screenshot_to_clipboard = None
     
     
-allchars = "UNINITIALISED"
-def reload_chars():
+#allchars = "UNINITIALISED"
+"""def reload_chars():
     global allchars
     filename = font_name()[:-4]+".txt"
     try:
@@ -218,7 +218,7 @@ def reload_chars():
     except Exception as e:
         print(e)
 
-reload_chars()
+reload_chars()"""
     
 def get_char_image(char):
     return ALLcharacters[current_font].get(char,None)
@@ -300,6 +300,44 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
             return ans
     return ans
 
+def touch_kerning_generate(fontid=None):
+    if(fontid==None):
+        fontid = current_font
+    background = tuple(ALLcharacters[fontid]["background"])
+    #print(ALLcharacters)
+    for first in tuple(ALLcharacters[fontid]):
+        if(len(first)==1):
+            for sec in tuple(ALLcharacters[fontid]):
+                if(len(sec)==1):
+                    leftimage = ALLcharacters[fontid][first]
+                    rightimage = ALLcharacters[fontid][sec]
+                    #print("IMAGES=",leftimage,rightimage)
+                    lw, lh = leftimage.width(), leftimage.height()
+                    rw, rh = rightimage.width(), rightimage.height()
+                    limit = int(min(rw/2,lw/2))
+                    kerning = limit
+                    for j in range(min(lh, rh)):
+                        li = 0
+                        ri = 0
+                        while(li<kerning and tuple(leftimage.get(lw-li-1,j))==background):
+                            li+=1
+                        if(background==(0,0,0) and list(leftimage.get(lw-li-1,j))[::-1]>[0,0,255]):
+                            #Non-red END pixel on black bakground
+                            #print("NONRED: ",tuple(leftimage.get(lw-li-1,j)))
+                            li-=1
+                        while(li+ri<kerning and tuple(rightimage.get(ri,j))==background):
+                            ri+=1
+                        #if(background==(0,0,0) and list(rightimage.get(ri,j))>[0,0,255]):
+                            #Non-blue BEGIN pixel on black bakground
+                            #print("NONRED: ",tuple(rightimage.get(ri,j)))
+                        #    ri-=1
+                        kerning = min(kerning, li+ri)
+                    ALLcharacters[fontid][first+sec]=kerning
+                    if(first=="A"):
+                        try:
+                            print(FONT_TYPES[fontid],first+sec+":"+str(ALLcharacters[fontid][first+sec])+"/"+str(limit))
+                        except: pass
+
 def measure(wrapped_text):
     measured_width = 0
     measured_height = 0
@@ -380,7 +418,9 @@ def draw_text(canvas,wrapped_text,vscroll=None):
             continue
         if(index>bottom):
             break"""
+        p_letter = "None"
         for letter in line:
+            kerning = 0
             if(letter==" "):
                 x+=spacesize
             else:
@@ -431,8 +471,12 @@ def draw_text(canvas,wrapped_text,vscroll=None):
                     letter=missing_character_character
                     char_image = get_char_image(letter)
                 if(char_image!=None):
-                    canvas.create_image(x, y, anchor=NW, image=char_image)
-                x+=get_char_width(letter)+font_hsep
+                    kerning = ALLcharacters[current_font].get(p_letter+letter,0)
+                    if(p_letter=="A" and kerning!=0):
+                        print(kerning)
+                    canvas.create_image(x-kerning, y, anchor=NW, image=char_image)
+                x+=get_char_width(letter)+font_hsep-kerning
+            p_letter = letter
 
 def load_mini_fonts():
     working_fonts=[]
@@ -460,6 +504,7 @@ def load_mini_fonts():
                 ALLcharacters.append(fontdata)
                 s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
                 working_fonts.append(FONTNAME)
+                touch_kerning_generate(len(ALLcharacters)-1)
                 tries = 2
                 #print(FONTNAME,s)    
             except Exception as e:
