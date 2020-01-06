@@ -301,43 +301,165 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
     return ans
 
 def touch_kerning_generate(fontid=None):
+    #x-axis touch
+    touch_average_kerning_generate(fontid)
+    return
+    # distance_touch_kerning_generate(fontid)
+    # return
+    # diagonal_touch_kerning_generate(fontid)
+    # return
     if(fontid==None):
         fontid = current_font
     background = tuple(ALLcharacters[fontid]["background"])
     #print(ALLcharacters)
-    for first in tuple(ALLcharacters[fontid]):
+    for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
-            for sec in tuple(ALLcharacters[fontid]):
-                if(len(sec)==1):
+            for sec in tuple(ALLcharacters[fontid]): 
+                if(len(sec)==1) :
                     leftimage = ALLcharacters[fontid][first]
                     rightimage = ALLcharacters[fontid][sec]
-                    #print("IMAGES=",leftimage,rightimage)
                     lw, lh = leftimage.width(), leftimage.height()
                     rw, rh = rightimage.width(), rightimage.height()
                     limit = int(min(rw/2,lw/2))
                     kerning = limit
                     for j in range(min(lh, rh)):
                         li = 0
-                        ri = 0
                         while(li<kerning and tuple(leftimage.get(lw-li-1,j))==background):
                             li+=1
                         if(background==(0,0,0) and list(leftimage.get(lw-li-1,j))[::-1]>[0,0,255]):
-                            #Non-red END pixel on black bakground
-                            #print("NONRED: ",tuple(leftimage.get(lw-li-1,j)))
-                            li-=1
+                            li-=1 #Non-red END pixel on black bakground
+                        ri = 0
                         while(li+ri<kerning and tuple(rightimage.get(ri,j))==background):
                             ri+=1
-                        #if(background==(0,0,0) and list(rightimage.get(ri,j))>[0,0,255]):
-                            #Non-blue BEGIN pixel on black bakground
-                            #print("NONRED: ",tuple(rightimage.get(ri,j)))
-                        #    ri-=1
                         kerning = min(kerning, li+ri)
                     ALLcharacters[fontid][first+sec]=kerning
                     if(first=="A"):
                         try:
                             print(FONT_TYPES[fontid],first+sec+":"+str(ALLcharacters[fontid][first+sec])+"/"+str(limit))
+                            print(background, tuple(leftimage.get(0,0)))
                         except: pass
-
+                        
+from math import ceil, floor, sqrt
+def diagonal_touch_kerning_generate(fontid=None):
+    #throw diagonals to avoid
+    if(fontid==None):
+        fontid = current_font
+    background = tuple(ALLcharacters[fontid]["background"])
+    #print(ALLcharacters)
+    for first in tuple(ALLcharacters[fontid]): 
+        if(len(first)==1):
+            for sec in tuple(ALLcharacters[fontid]): 
+                if(len(sec)==1) :
+                    leftimage = ALLcharacters[fontid][first]
+                    rightimage = ALLcharacters[fontid][sec]
+                    lw, lh = leftimage.width(), leftimage.height()
+                    rw, rh = rightimage.width(), rightimage.height()
+                    limit = int(min(rw/2,lw/2))
+                    kerning = limit
+                    leftsides = [limit]*lh
+                    for j in range(lh):
+                        li = 0
+                        while(li<kerning and tuple(leftimage.get(lw-li-1,j))==background):
+                            li+=1
+                        if(background==(0,0,0) and list(leftimage.get(lw-li-1,j))[::-1]>[0,0,255]):
+                            li-=1 #Non-red END pixel on black bakground
+                        #if(background==(0,0,0)):
+                        #    li-=1
+                        leftsides[j]=li
+                    for j in range(rh):
+                        ri = 0
+                        while(ri<kerning and tuple(rightimage.get(ri,j))==background):
+                            ri+=1
+                        for lj in range(lh):
+                            li = leftsides[lj]+floor(abs(lj-j)*0.95)
+                            kerning = min(kerning, li+ri)
+                        # kerning = min(leftsides)+ri
+                    ALLcharacters[fontid][first+sec]=kerning
+                    
+def distance_touch_kerning_generate(fontid=None,distance=None):
+    #distance
+    if(distance==None):
+        distance=font_hsep
+    if(fontid==None):
+        fontid = current_font
+    background = tuple(ALLcharacters[fontid]["background"])
+    #print(ALLcharacters)
+    for first in tuple(ALLcharacters[fontid]): 
+        if(len(first)==1):
+            for sec in tuple(ALLcharacters[fontid]): 
+                if(len(sec)==1) :
+                    leftimage = ALLcharacters[fontid][first]
+                    rightimage = ALLcharacters[fontid][sec]
+                    lw, lh = leftimage.width(), leftimage.height()
+                    rw, rh = rightimage.width(), rightimage.height()
+                    limit = int(min(rw/2,lw/2))
+                    kerning = limit
+                    leftsides = [limit]*lh
+                    for j in range(lh):
+                        li = 0
+                        while(li<kerning and tuple(leftimage.get(lw-li-1,j))==background):
+                            li+=1
+                        if(background==(0,0,0) and list(leftimage.get(lw-li-1,j))[::-1]>[0,0,255]):
+                            li-=1 #Non-red END pixel on black bakground
+                        leftsides[j]=li
+                    for j in range(rh):
+                        ri = 0
+                        while(ri<kerning and tuple(rightimage.get(ri,j))==background):
+                            ri+=1
+                        for lj in range(lh):
+                            dy=abs(lj-j)*0.95
+                            dx=leftsides[lj]+ri
+                            if(dy<=distance):
+                                kerning = min(kerning, floor(dx-sqrt(distance**2-dy**2)))
+                    ALLcharacters[fontid][first+sec]=kerning+font_hsep
+from statistics import median
+def touch_average_kerning_generate(fontid=None):
+    #Inspired by Shoebox's description of their algorithm (not at all similar)
+    #x-axis average
+    if(fontid==None):
+        fontid = current_font
+    background = tuple(ALLcharacters[fontid]["background"])
+    #print(ALLcharacters)
+    kernings = []
+    for first in tuple(ALLcharacters[fontid]): 
+        if(len(first)==1):
+            for sec in tuple(ALLcharacters[fontid]): 
+                if(len(sec)==1) :
+                    leftimage = ALLcharacters[fontid][first]
+                    rightimage = ALLcharacters[fontid][sec]
+                    lw, lh = leftimage.width(), leftimage.height()
+                    rw, rh = rightimage.width(), rightimage.height()
+                    left_limit = lw*2/3
+                    right_limit = rw*2/3
+                    avsum = 0
+                    avdiv = 0
+                    for j in range(min(lh, rh)):
+                        li = 0
+                        while(li<left_limit and tuple(leftimage.get(lw-li-1,j))==background):
+                            li+=1
+                        if(background==(0,0,0) and list(leftimage.get(lw-li-1,j))[::-1]>[0,0,255]):
+                            li-=1 #Non-red END pixel on black bakground ##SHOULDN'T be used on those anyway
+                        ri = 0
+                        while(ri<right_limit and tuple(rightimage.get(ri,j))==background):
+                            ri+=1
+                        if(li<left_limit and ri<right_limit):
+                            avsum += li+ri
+                            avdiv += 1
+                            
+                    if(avdiv>0):
+                        kerning = round(avsum/avdiv)
+                    else:
+                        kerning = int(min(rw/2,lw/2))
+                    kernings.append(kerning)
+                    ALLcharacters[fontid][first+sec]=kerning
+    zero_kerning = median(kernings)
+    for first in tuple(ALLcharacters[fontid]): 
+        if(len(first)==1):
+            for sec in tuple(ALLcharacters[fontid]): 
+                if(len(sec)==1) :
+                    ALLcharacters[fontid][first+sec]-=zero_kerning
+                    
+                    
 def measure(wrapped_text):
     measured_width = 0
     measured_height = 0
@@ -504,7 +626,7 @@ def load_mini_fonts():
                 ALLcharacters.append(fontdata)
                 s = str(fontdata).encode(sys.stdout.encoding or "utf-8", "replace")
                 working_fonts.append(FONTNAME)
-                touch_kerning_generate(len(ALLcharacters)-1)
+                #touch_kerning_generate(len(ALLcharacters)-1)
                 tries = 2
                 #print(FONTNAME,s)    
             except Exception as e:
@@ -723,6 +845,7 @@ def create_optionswindow(root,size_callback):
             load_and_update() #changing fonts can change the options
             update_font()
             size_callback()
+            touch_kerning_generate(current_font)
         ftvar.trace("w",ftfun)
         
         """
