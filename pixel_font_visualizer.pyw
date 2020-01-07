@@ -76,6 +76,7 @@ current_font = 0
 
 current_kerning = 1
 kerning_data = "BBox"
+temp_kernings = dict()
 
 def font_name(id=None):
     if(id==None):
@@ -92,6 +93,8 @@ def save_font_options(): #current_height, current_width):
     ini+= "capsstate",force_case
     ini+= "kerning",current_kerning
     ini.save()
+    if(isinstance(kerning_data,dict)):
+        save_json(kerning_filename(current_font,current_kerning),kerning_data)
     
 def load_font_options(filename="default_options",silent=True):
     global font_hsep,\
@@ -604,24 +607,25 @@ def kerning_full_name(kerning_id):
 
 def kerning_filename(font_id,kerning_id):
     compact_names = ("Mono","BBox","PackX","Diag","Dist","AvgArea","Custom")
-    filename = font_name(font_id)[:-4] + "." + compact_names[kerning_id] 
+    filename = font_name(font_id)[:-4] + ".Kern" + compact_names[kerning_id] 
     if(kerning_id==K_DIST):
         filename+=str(font_hsep)
-    filename+= ".kerning"
     return filename
     
 def set_kerning(kerning_id):
     font_id = current_font
     global kerning_data, current_kerning
-    try:
-        kerning_data = load_json(kerning_filename(font_id,kerning_id))
-    except:
-        kerning_generate = ["BBox","Mono",touch_kerning_generate,diagonal_touch_kerning_generate,distance_touch_kerning_generate,touch_average_kerning_generate]
-        if not isinstance(kerning_generate[kerning_id],str):
-            kerning_data = kerning_generate[kerning_id](font_id)
-            save_json(kerning_filename(font_id,kerning_id),kerning_data)
-        else:
-            kerning_data=kerning_generate
+    kerning_data = temp_kernings.get(kerning_filename(font_id,kerning_id),None)
+    if(kerning_data==None):
+        try:
+            kerning_data = load_json(kerning_filename(font_id,kerning_id))
+        except:
+            kerning_generate = ["BBox","Mono",touch_kerning_generate,diagonal_touch_kerning_generate,distance_touch_kerning_generate,touch_average_kerning_generate]
+            if not isinstance(kerning_generate[kerning_id],str):
+                kerning_data = kerning_generate[kerning_id](font_id)
+            else:
+                kerning_data=kerning_generate
+            temp_kernings[kerning_filename(font_id,kerning_id)]=kerning_data
     current_kerning = kerning_id 
 
 def load_json(filename):
