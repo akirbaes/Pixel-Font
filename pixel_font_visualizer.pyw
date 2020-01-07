@@ -66,7 +66,7 @@ font_hsep = 0
 font_vsep = 1
 font_x0 = 1
 font_y0 = 1
-allcaps = 0
+force_case = 0
 superpose_missing_accents = True
 accent_vertical_gap = 1
 fill_missing_with_unidecode = True
@@ -74,7 +74,7 @@ missing_character_character = "?"
 
 current_font = 0
 
-current_kerning = 0
+current_kerning = 1
 kerning_data = "BBox"
 
 def font_name(id=None):
@@ -89,7 +89,7 @@ def save_font_options(): #current_height, current_width):
     ini+= "font_hsep",font_hsep
     ini+= "font_vsep",font_vsep
     ini+= "spacesize",spacesize
-    ini+= "capsstate",allcaps
+    ini+= "capsstate",force_case
     ini+= "kerning",current_kerning
     ini.save()
     
@@ -97,17 +97,17 @@ def load_font_options(filename="default_options",silent=True):
     global font_hsep,\
            font_vsep,\
            spacesize,\
-           allcaps,\
+           force_case,\
            current_kerning
     filename="fonts"+os.sep+font_name()[:-4]+".ini"
     ini = QuickIni(filename)
     ini.load()
     
     font_hsep = ini.get("font_hsep",1)
-    font_vsep = ini.get("font_vsep",1)
+    font_vsep = ini.get("font_vsep",2)
     spacesize = 3>ini>"spacesize"
-    allcaps   = 5>ini>"capsstate"
-    current_kerning  = 0>ini>"kerning"
+    force_case   = 0>ini>"capsstate"
+    current_kerning  = 1>ini>"kerning"
     update_font()
     set_kerning(current_kerning)
 
@@ -236,9 +236,11 @@ def cut_word(word,pixels_width):
     return word[:cutoff], word[cutoff:]
     
 def wrap_text(pixels_width, pixels_height, text, leave_early = False):
-    #print("Allcaps is:",allcaps)
-    if(allcaps==1):
+    #print("force_case is:",force_case)
+    if(force_case==1):
         text = text.upper()
+    elif(force_case==2):
+        text = text.lower()
     lines = text.split("\n")
     ans = []
     #print("Width:",pixels_width)
@@ -309,7 +311,8 @@ def touch_kerning_generate(fontid=None):
                         while(li+ri<kerning and tuple(rightimage.get(ri,j))==background):
                             ri+=1
                         kerning = min(kerning, li+ri)
-                    kerning_data[first+sec]=kerning
+                    if(kerning!=0):
+                        kerning_data[first+sec]=kerning
     return kerning_data
 from math import ceil, floor, sqrt
 def diagonal_touch_kerning_generate(fontid=None):
@@ -347,7 +350,8 @@ def diagonal_touch_kerning_generate(fontid=None):
                             li = leftsides[lj]+floor(abs(lj-j)*0.95)
                             kerning = min(kerning, li+ri)
                         # kerning = min(leftsides)+ri
-                    kerning_data[first+sec]=kerning
+                    if(kerning!=0):
+                        kerning_data[first+sec]=kerning
     return kerning_data
                     
 def distance_touch_kerning_generate(fontid=None,distance=None):
@@ -386,7 +390,8 @@ def distance_touch_kerning_generate(fontid=None,distance=None):
                             dx=leftsides[lj]+ri
                             if(dy<=distance):
                                 kerning = min(kerning, floor(dx-sqrt(distance**2-dy**2)))
-                    kerning_data[first+sec]=kerning+font_hsep
+                    if(kerning!=0):
+                        kerning_data[first+sec]=kerning+font_hsep
     return kerning_data
 from statistics import median
 def touch_average_kerning_generate(fontid=None):
@@ -435,6 +440,9 @@ def touch_average_kerning_generate(fontid=None):
             for sec in tuple(ALLcharacters[fontid]): 
                 if(len(sec)==1) :
                     kerning_data[first+sec]-=zero_kerning
+    for k in list(kerning_data.keys()):
+        if(kerning_data[k]==0):
+            kerning_data.pop(k)
     return kerning_data
                     
                     
@@ -583,19 +591,19 @@ def draw_text(canvas,wrapped_text,vscroll=None):
                     kerning = get_char_width(letter)-FONT_WIDTH
                 x+=get_char_width(letter)+font_hsep-kerning
             p_letter = letter
-K_BBOX = 0
-K_MONO = 1
+K_BBOX = 1
+K_MONO = 0
 K_PACKX = 2
 K_DIAG = 3
 K_DIST = 4
 K_AVGAREA = 5
 K_CUSTOM = 6
-KERNING_TYPES = ("Bounding Box","Fixed Width","Pack in X","Diagonal Fit","Distance","Average Area")
+KERNING_TYPES = ("Fixed Width","Bounding Box","Pack in X","Diagonal Fit","Distance","Average Area")
 def kerning_full_name(kerning_id):
     return KERNING_TYPES[kerning_id]
 
 def kerning_filename(font_id,kerning_id):
-    compact_names = ("BBox","Mono","PackX","Diag","Dist","AvgArea","Custom")
+    compact_names = ("Mono","BBox","PackX","Diag","Dist","AvgArea","Custom")
     filename = font_name(font_id)[:-4] + "." + compact_names[kerning_id] 
     if(kerning_id==K_DIST):
         filename+=str(font_hsep)
@@ -861,14 +869,24 @@ def create_optionswindow(root,size_callback):
         spvar.trace("w",spfun)
         
         
-        Label(leftframe,text="Force capitalization").pack(side=TOP)
-        capvar = IntVar(value=allcaps)
-        Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
+        Label(leftframe,text="Convert case").pack(side=TOP)
+        capvar = IntVar(value=force_case)
+        #Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
+        radioframe=Frame(leftframe)
+        for index,text in enumerate(("No","CAP","low")):
+            rb = Radiobutton(radioframe, text=text,variable=capvar, value=index)
+            print(index,force_case)
+            if(index==force_case):
+                print("selected",text)
+                rb.select()
+            rb.pack(side=LEFT)
         def capfun(*args):
-            global allcaps
-            allcaps = capvar.get()
+            global force_case
+            force_case = capvar.get()
             size_callback()
+        radioframe.pack(side=TOP)
         capvar.trace("w",capfun)
+        capvar.set(force_case)
         
         def save_and_clean():
             save_font_options()
@@ -883,7 +901,7 @@ def create_optionswindow(root,size_callback):
             x0var.set(font_x0)
             y0var.set(font_y0)
             spvar.set(spacesize)
-            capvar.set(allcaps)
+            capvar.set(force_case)
             kernvar.set(kerning_full_name(current_kerning))
             recaplabel_update()
             #ftvar.set(FONT_TYPES[current_font])
