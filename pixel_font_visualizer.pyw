@@ -11,6 +11,7 @@ from tkinter import *
 import tkinter as tk
 import datetime
 import traceback
+from quickini import QuickIni
 try:
     from PIL import ImageGrab
 except:
@@ -21,7 +22,7 @@ from tkinter import font
 import font_to_data
 root = Tk()
 sample_text_file = "sample_text.txt"
-root.title("Bitmap font viewer")
+root.title("Pixel font viewer")
 root.iconbitmap("appicon.ico")
 root.configure(background="grey")
 
@@ -74,70 +75,13 @@ missing_character_character = "?"
 current_font = 0
 
 current_kerning = 0
-
-kernings = ["Box","Mono","Pack","DiagTouch","Distance","Average","MyKerning"]
+kerning_data = "BBox"
 
 def font_name(id=None):
     if(id==None):
         id=current_font
     return FONT_TYPES[id]
-    
-class QuickIni:
-    def __init__(self, name):
-        self.filename = name
-        self.values=dict()
-    def __iadd__(self,pair):
-        name, value = pair
-        self.values[name]=value
-        return self
-    def set(self,name,value):
-        self.values[name]=value
-    def save(self):
-        f = open(self.filename,"w")
-        for name, value in self.values.items():
-            f.write(str(name)+" = "+str(value)+"\n")
-        f.close()
-    def load(self):
-        f = open(self.filename,"r")
-        #print(self.filename)
-        data = f.readlines()
-        f.close()
-        self.values=dict()
-        for line in data:
-            #print(repr(line))
-            try:
-                name,value = line.strip().split("=")
-                name=name.strip()
-                try:
-                    value = int(value)
-                except:
-                    try:
-                        value = float(value)
-                    except:
-                        value = value.strip()
-                self.values[name]=value
-            except: continue
-        return self
-    def get(self,name,default):
-        return self.values.get(name,default)
-    def __truediv__(self,name):
-        if(isinstance(name,tuple)):
-            name,default = name
-            return self.values.get(name,default)
-        return self.values[name]
-    def __gt__(self,name):
-        return self.values.get(name)
-    def __lt__(self,other):
-        class _DefaultIni_:
-            def __init__(self,parent,value):
-                self.parent=parent
-                self.value=value
-            def __gt__(self,name):
-                try:
-                    return self.parent.values.get(name)
-                except:
-                    return self.other
-        return _DefaultIni_(self,other)
+
     
 def save_font_options(): #current_height, current_width):
     filename="fonts"+os.sep+font_name()[:-4]+".ini"
@@ -146,7 +90,7 @@ def save_font_options(): #current_height, current_width):
     ini+= "font_vsep",font_vsep
     ini+= "spacesize",spacesize
     ini+= "capsstate",allcaps
-    ini+= "kerning_type",current_kerning
+    ini+= "kerning",current_kerning
     ini.save()
     
 def load_font_options(filename="default_options",silent=True):
@@ -163,14 +107,16 @@ def load_font_options(filename="default_options",silent=True):
     font_vsep = ini.get("font_vsep",1)
     spacesize = 3>ini>"spacesize"
     allcaps   = 5>ini>"capsstate"
-    current_kerning  = 0>ini>"kerning_type"
+    current_kerning  = 0>ini>"kerning"
     update_font()
+    set_kerning(current_kerning)
 
 def save_global_options():
     filename = "settings.ini"    
     ini = QuickIni(filename)
     ini += "font_name",font_name()
     ini += "font_x0",font_x0
+    ini += "font_y0",font_y0
     #ini += "current_height",current_height
     #ini += "current_width",current_width
     ini.save()
@@ -189,7 +135,6 @@ def load_global_options():
 
 def subimage(sheet, l, t, r, b):
     #https://stackoverflow.com/questions/16579674/using-spritesheets-in-tkinter
-    #print(l,t,r,b)
     dst = tk.PhotoImage()
     dst.tk.call(dst, 'copy', sheet, '-from', l, t, r, b, '-to', 0, 0)
     return dst
@@ -250,22 +195,12 @@ try:
         send_to_clipboard(win32clipboard.CF_DIB, data)
         
 
-except:
+except Exception as e:
+    print(e)
     send_to_clipboard = None
     copy_screenshot_to_clipboard = None
-    
-    
-#allchars = "UNINITIALISED"
-"""def reload_chars():
-    global allchars
-    filename = font_name()[:-4]+".txt"
-    try:
-        with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
-            allchars = f.read().replace("\n","")
-    except Exception as e:
-        print(e)
+    print("Clipboard capabilities not enabled, try\n\t pip install pywin32")
 
-reload_chars()"""
     
 def get_char_image(char):
     return ALLcharacters[current_font].get(char,None)
@@ -349,15 +284,10 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
 
 def touch_kerning_generate(fontid=None):
     #x-axis touch
-    touch_average_kerning_generate(fontid)
-    return
-    # distance_touch_kerning_generate(fontid)
-    # return
-    # diagonal_touch_kerning_generate(fontid)
-    # return
     if(fontid==None):
         fontid = current_font
     background = tuple(ALLcharacters[fontid]["background"])
+    kerning_data = dict()
     #print(ALLcharacters)
     for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
@@ -379,19 +309,15 @@ def touch_kerning_generate(fontid=None):
                         while(li+ri<kerning and tuple(rightimage.get(ri,j))==background):
                             ri+=1
                         kerning = min(kerning, li+ri)
-                    ALLcharacters[fontid][first+sec]=kerning
-                    if(first=="A"):
-                        try:
-                            print(FONT_TYPES[fontid],first+sec+":"+str(ALLcharacters[fontid][first+sec])+"/"+str(limit))
-                            print(background, tuple(leftimage.get(0,0)))
-                        except: pass
-                        
+                    kerning_data[first+sec]=kerning
+    return kerning_data
 from math import ceil, floor, sqrt
 def diagonal_touch_kerning_generate(fontid=None):
     #throw diagonals to avoid
     if(fontid==None):
         fontid = current_font
     background = tuple(ALLcharacters[fontid]["background"])
+    kerning_data = dict()
     #print(ALLcharacters)
     for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
@@ -421,7 +347,8 @@ def diagonal_touch_kerning_generate(fontid=None):
                             li = leftsides[lj]+floor(abs(lj-j)*0.95)
                             kerning = min(kerning, li+ri)
                         # kerning = min(leftsides)+ri
-                    ALLcharacters[fontid][first+sec]=kerning
+                    kerning_data[first+sec]=kerning
+    return kerning_data
                     
 def distance_touch_kerning_generate(fontid=None,distance=None):
     #distance
@@ -430,6 +357,7 @@ def distance_touch_kerning_generate(fontid=None,distance=None):
     if(fontid==None):
         fontid = current_font
     background = tuple(ALLcharacters[fontid]["background"])
+    kerning_data = dict()
     #print(ALLcharacters)
     for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
@@ -458,7 +386,8 @@ def distance_touch_kerning_generate(fontid=None,distance=None):
                             dx=leftsides[lj]+ri
                             if(dy<=distance):
                                 kerning = min(kerning, floor(dx-sqrt(distance**2-dy**2)))
-                    ALLcharacters[fontid][first+sec]=kerning+font_hsep
+                    kerning_data[first+sec]=kerning+font_hsep
+    return kerning_data
 from statistics import median
 def touch_average_kerning_generate(fontid=None):
     #Inspired by Shoebox's description of their algorithm (not at all similar)
@@ -467,6 +396,7 @@ def touch_average_kerning_generate(fontid=None):
         fontid = current_font
     background = tuple(ALLcharacters[fontid]["background"])
     #print(ALLcharacters)
+    kerning_data = dict()
     kernings = []
     for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
@@ -498,13 +428,14 @@ def touch_average_kerning_generate(fontid=None):
                     else:
                         kerning = int(min(rw/2,lw/2))
                     kernings.append(kerning)
-                    ALLcharacters[fontid][first+sec]=kerning
+                    kerning_data[first+sec]=kerning
     zero_kerning = median(kernings)
     for first in tuple(ALLcharacters[fontid]): 
         if(len(first)==1):
             for sec in tuple(ALLcharacters[fontid]): 
                 if(len(sec)==1) :
-                    ALLcharacters[fontid][first+sec]-=zero_kerning
+                    kerning_data[first+sec]-=zero_kerning
+    return kerning_data
                     
                     
 def measure(wrapped_text):
@@ -640,12 +571,61 @@ def draw_text(canvas,wrapped_text,vscroll=None):
                     letter=missing_character_character
                     char_image = get_char_image(letter)
                 if(char_image!=None):
-                    kerning = ALLcharacters[current_font].get(p_letter+letter,0)
-                    if(p_letter=="A" and kerning!=0):
-                        print(kerning)
+                    if(isinstance(kerning_data,dict)):
+                        kerning = kerning_data.get(p_letter+letter,0)
+                    elif(current_kerning==K_BBOX):
+                            kerning==0
+                    elif(current_kerning==K_MONO):
+                        kerning = (get_char_width(letter)-FONT_WIDTH)//2
+                            
                     canvas.create_image(x-kerning, y, anchor=NW, image=char_image)
+                if(current_kerning==K_MONO):
+                    kerning = get_char_width(letter)-FONT_WIDTH
                 x+=get_char_width(letter)+font_hsep-kerning
             p_letter = letter
+K_BBOX = 0
+K_MONO = 1
+K_PACKX = 2
+K_DIAG = 3
+K_DIST = 4
+K_AVGAREA = 5
+K_CUSTOM = 6
+KERNING_TYPES = ("Bounding Box","Fixed Width","Pack in X","Diagonal Fit","Distance","Average Area")
+def kerning_full_name(kerning_id):
+    return KERNING_TYPES[kerning_id]
+
+def kerning_filename(font_id,kerning_id):
+    compact_names = ("BBox","Mono","PackX","Diag","Dist","AvgArea","Custom")
+    filename = font_name(font_id)[:-4] + "." + compact_names[kerning_id] 
+    if(kerning_id==K_DIST):
+        filename+=str(font_hsep)
+    filename+= ".kerning"
+    return filename
+    
+def set_kerning(kerning_id):
+    font_id = current_font
+    global kerning_data, current_kerning
+    try:
+        kerning_data = load_json(kerning_filename(font_id,kerning_id))
+    except:
+        kerning_generate = ["BBox","Mono",touch_kerning_generate,diagonal_touch_kerning_generate,distance_touch_kerning_generate,touch_average_kerning_generate]
+        if not isinstance(kerning_generate[kerning_id],str):
+            kerning_data = kerning_generate[kerning_id](font_id)
+            save_json(kerning_filename(font_id,kerning_id),kerning_data)
+        else:
+            kerning_data=kerning_generate
+    current_kerning = kerning_id 
+
+def load_json(filename):
+    with io.open(os.path.join("fonts",filename),'r',encoding='utf8') as f:
+        jsondict = json.load(f)
+    return jsondict
+    
+def save_json(filename,dict_data):
+    jsonform = json.dumps(dict_data,indent=4,separators=(',', ': '))
+    with io.open(os.path.join("fonts",filename),'w',encoding='utf8') as f:
+        f.write(jsonform)
+        
 
 def load_mini_fonts():
     working_fonts=[]
@@ -799,10 +779,39 @@ def create_optionswindow(root,size_callback):
         leftframe.pack(side=LEFT,fill=BOTH, expand=YES)
         rightframe = Frame(mainframe)
         rightframe.pack(side=RIGHT,fill=BOTH, expand=YES)
-        #leftframe = Frame(leftframeall)
-        #leftframe.pack(side=TOP)
-        #rightframe = Frame(rightframeall)
-        #rightframe.pack(side=TOP)
+        
+        
+        
+        
+        recapbglabel = Label(rightframe,text="Font bg: ")
+        recapbglabel.pack(side=TOP)
+        recapsizelabel = Label(rightframe,text="Size : ")
+        recapsizelabel.pack(side=TOP)
+        
+        
+        
+        Label(leftframe,text="Font type:").pack(side=TOP)
+        ftvar = StringVar(value = font_name())
+        sb = Spinbox(leftframe, width=22, values=FONT_TYPES,textvariable = ftvar)
+        sb.pack(side=TOP)
+        sb.delete(0,"end")
+        sb.insert(0,font_name()) #for some reason, doesn't get the right default value
+        #print(sb.get())
+        def ftfun(*args):
+            global current_font
+            current_font = FONT_TYPES.index(ftvar.get())
+            save_global_options()
+            update_font(current_font)
+            load_and_update() #changing fonts can change the options
+            set_kerning(current_kerning)
+            size_callback()
+        ftvar.trace("w",ftfun)
+        CreateToolTip(sb,"\n".join(reversed(FONT_TYPES)))
+        
+        def recaplabel_update():
+            recapbglabel.config(text="Font bg: "+str(FONT_BACKGROUND))
+            recapsizelabel.config(text="Size: "+str(FONT_WIDTH)+"x"+str(FONT_HEIGHT))
+        recaplabel_update()
         
         Label(leftframe,text="Horizontal separation").pack(side=TOP)
         hsepvar = IntVar(value=font_hsep)
@@ -810,6 +819,8 @@ def create_optionswindow(root,size_callback):
         def hsepfun(*args):
             global font_hsep
             font_hsep = hsepvar.get()
+            if(current_kerning==K_DIST):
+                set_kerning(current_kerning)
             size_callback()
         hsepvar.trace("w",hsepfun)
         
@@ -859,8 +870,11 @@ def create_optionswindow(root,size_callback):
             size_callback()
         capvar.trace("w",capfun)
         
+        def save_and_clean():
+            save_font_options()
+            #clean_unused_kerning[TODO]
+        Button(rightframe,text="Save options",command=save_and_clean).pack(side=BOTTOM)
         
-        Button(rightframe,text="Save options",command=save_font_options).pack(side=BOTTOM)
         def load_and_update(*args):
             load_font_options("fonts"+os.sep+font_name()[:-4]) #Try to load specific options, otherwise do nothing
             size_callback()
@@ -870,6 +884,8 @@ def create_optionswindow(root,size_callback):
             y0var.set(font_y0)
             spvar.set(spacesize)
             capvar.set(allcaps)
+            kernvar.set(kerning_full_name(current_kerning))
+            recaplabel_update()
             #ftvar.set(FONT_TYPES[current_font])
             
 
@@ -877,23 +893,23 @@ def create_optionswindow(root,size_callback):
         undobutton.pack(side=BOTTOM)
         CreateToolTip(undobutton,"Load last saved options")
         
-        
-        Label(leftframe,text="Font type:").pack(side=BOTTOM)
-        ftvar = StringVar(value = font_name())
-        sb = Spinbox(rightframe, width=22, values=FONT_TYPES,textvariable = ftvar)
-        sb.pack(side=BOTTOM)
-        sb.delete(0,"end")
-        sb.insert(0,font_name()) #for some reason, doesn't get the right default value
-        #print(sb.get())
-        def ftfun(*args):
-            global current_font
-            current_font = FONT_TYPES.index(ftvar.get())
-            save_global_options()
-            load_and_update() #changing fonts can change the options
-            update_font()
+        Label(leftframe,text="Letters spacing:").pack(side=BOTTOM)
+        kernvar = StringVar(value = kerning_full_name(current_kerning))
+        sk = Spinbox(rightframe, width=22, values=KERNING_TYPES,textvariable=kernvar)
+        sk.pack(side=BOTTOM)
+        sk.delete(0,"end")
+        sk.insert(0,kerning_full_name(current_kerning)) #for some reason, doesn't get the right default value
+        def kfun(*args):
+            global current_kerning
+            current_kerning=KERNING_TYPES.index(kernvar.get())
+            set_kerning(current_kerning)
             size_callback()
-            touch_kerning_generate(current_font)
-        ftvar.trace("w",ftfun)
+        kernvar.trace("w",kfun)
+        CreateToolTip(sk,"\n".join(reversed(KERNING_TYPES)))
+        
+        
+        ftvar.set(font_name())
+        
         
         """
         Label(rightframe,text="AAAAAAAAA").pack()
@@ -1058,24 +1074,18 @@ Is it not proof that I possess the stone of life?""")
     screenshotButton.pack(side=LEFT)
     CreateToolTip(screenshotButton,"Take a screenshot")
     
-    def clipboardCallback():
-        if(copy_screenshot_to_clipboard!=None):
-            copy_screenshot_to_clipboard(mycanvas)
-            print("Image copied to clipboard")
-            flush()
-        else:
-            print("Clipboard functionality not available. Requires pypiwin32")
-            flush()
-    clipboardButton = Button(bottomFrame,text="Copy", command = clipboardCallback)
-    clipboardButton.pack(side=LEFT)
-    CreateToolTip(clipboardButton,"Copy image to clipboard")
-    
-    #OPTIONS [TODO]
-    #Entries for hsep, vsep, spacesize
-    #Toggle for crop image to fit text, or crop all?
-    #[TODO]starting position
-    #[TODO] other font
-    #[TODO] all caps or not
+    if(copy_screenshot_to_clipboard!=None):
+        def clipboardCallback():
+            if(copy_screenshot_to_clipboard!=None):
+                copy_screenshot_to_clipboard(mycanvas)
+                print("Image copied to clipboard")
+                flush()
+            else:
+                print("Clipboard functionality not available. Requires pypiwin32")
+                flush()
+        clipboardButton = Button(bottomFrame,text="Copy", command = clipboardCallback)
+        clipboardButton.pack(side=LEFT)
+        CreateToolTip(clipboardButton,"Copy image to clipboard")
     
     def optionsbuttonCallback():
         create_optionswindow(root,sizechange_callback)

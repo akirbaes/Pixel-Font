@@ -1,9 +1,5 @@
 •Align: left, right, center, _expand_
 
-•[toggle]force fixed width
-    use hsep to fix spacing
-    allignments? default to center (center or left - right is same)
-    
 •[toggle]force fixed height (raise low characters)
     
 •Add GUI elements for
@@ -13,8 +9,9 @@
 
 •Current replacement for chars is not consistent with the wrapping algorithm
     get_char_image should be going trough the replacements itself 
-    get_char_width should call get_chat_image instead of diretly going for the data
+    get_char_width should call get_char_image instead of diretly going for the data
 •Current accents is not consistent with size
+    Maybe generate the accents by making a new image
   
 •maybe editable tables of convertable characters to try 
     for example 
@@ -27,3 +24,60 @@
 Subpixel fonts:
 •Alternating line background coloration?
 •Column show?
+
+
+--PARTIAL--
+Infos to put in the .ini (also, make it a json?):
+    Hsep
+    Vsep
+    Space character width
+    
+    
+    Force caps/lowercases (to indicate that the font is limited)
+    Baseline
+    Fixed width / pixel width / kerning width
+    Alignment (left/right/center/fill) → or put that at the app level
+    Use generated accents / generated oe ae 
+    Accents vertical gap
+    Accents horizontal gap
+    Fill missing characters level : 
+    
+    Kerning strenght?
+    Kerning values? or put'em in the .json for pairs of letters
+    Replacements/equivalences
+    Accents re-position per-letter 
+    
+    (Interface: pairs, click on the ones to change, arrows pad on the right will affect selected ones)
+    
+    Indicators of: max width and height of font
+    Background color
+    
+REMOVE:
+    Borders. Those are more for the app (rarely used except for screenshots)
+    
+    
+    
+    
+    
+
+
+
+--DONE--
+•[toggle]force fixed width 
+    use hsep to fix spacing
+    allignments? default to center (center or left - right is same)
+•Auto-kerning based on pixels collisions
+•Averaged version of it
+
+HSEP-based kerning that only allows fonts to be pixel-close of HSEP pixels (it's not very good)
+Algo 1: First, only based on one axis (easy-superposition)
+Algo 2: Based on two axis: borders (for overhangs that get too close)
+Algo 3: Blur
+
+EDIT: done as Letters spacing:
+    Bounding Box
+    Fixed Width
+    Pack in X
+    Diagonal Touch
+    Set Distance
+    Average Area
