@@ -66,79 +66,126 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 allcaps = 0
-current_font = 0
 superpose_missing_accents = True
 accent_vertical_gap = 1
 fill_missing_with_unidecode = True
 missing_character_character = "?"
+
+current_font = 0
+
+current_kerning = 0
+
+kernings = ["Box","Mono","Pack","DiagTouch","Distance","Average","MyKerning"]
+
 def font_name(id=None):
     if(id==None):
         id=current_font
     return FONT_TYPES[id]
     
+class QuickIni:
+    def __init__(self, name):
+        self.filename = name
+        self.values=dict()
+    def __iadd__(self,pair):
+        name, value = pair
+        self.values[name]=value
+        return self
+    def set(self,name,value):
+        self.values[name]=value
+    def save(self):
+        f = open(self.filename,"w")
+        for name, value in self.values.items():
+            f.write(str(name)+" = "+str(value)+"\n")
+        f.close()
+    def load(self):
+        f = open(self.filename,"r")
+        #print(self.filename)
+        data = f.readlines()
+        f.close()
+        self.values=dict()
+        for line in data:
+            #print(repr(line))
+            try:
+                name,value = line.strip().split("=")
+                name=name.strip()
+                try:
+                    value = int(value)
+                except:
+                    try:
+                        value = float(value)
+                    except:
+                        value = value.strip()
+                self.values[name]=value
+            except: continue
+        return self
+    def get(self,name,default):
+        return self.values.get(name,default)
+    def __truediv__(self,name):
+        if(isinstance(name,tuple)):
+            name,default = name
+            return self.values.get(name,default)
+        return self.values[name]
+    def __gt__(self,name):
+        return self.values.get(name)
+    def __lt__(self,other):
+        class _DefaultIni_:
+            def __init__(self,parent,value):
+                self.parent=parent
+                self.value=value
+            def __gt__(self,name):
+                try:
+                    return self.parent.values.get(name)
+                except:
+                    return self.other
+        return _DefaultIni_(self,other)
+    
 def save_font_options(): #current_height, current_width):
-    filename="fonts"+os.sep+font_name()[:-4]
-    f = open(filename+".ini","w")
-    f.write(str(font_hsep)+"\n")
-    f.write(str(font_vsep)+"\n")
-    f.write(str(spacesize)+"\n")
-    f.write(str(font_x0)  +"\n")
-    f.write(str(font_y0)  +"\n")
-    f.write(str(allcaps)  +"\n")
-    #f.write(str(current_font)  +"\n")
-    f.close()
-    #file.write(current_height)
-    #file.write(current_width)
+    filename="fonts"+os.sep+font_name()[:-4]+".ini"
+    ini = QuickIni(filename)
+    ini+= "font_hsep",font_hsep
+    ini+= "font_vsep",font_vsep
+    ini+= "spacesize",spacesize
+    ini+= "capsstate",allcaps
+    ini+= "kerning_type",current_kerning
+    ini.save()
     
 def load_font_options(filename="default_options",silent=True):
     global font_hsep,\
            font_vsep,\
            spacesize,\
-           font_x0  ,\
-           font_y0  ,\
-           allcaps
-    try:
-        f = open(filename+".ini","r")
-        data = f.readlines()
-        f.close()
-        newdata = []
-        #print(data)
-        for x in data:
-            try:
-                newdata.append(int(x))
-            except:
-                print(x,"could not be read")
-        font_hsep = newdata.pop(0)
-        font_vsep = newdata.pop(0)
-        spacesize = newdata.pop(0)
-        font_x0   = newdata.pop(0)
-        font_y0   = newdata.pop(0)
-        allcaps   = newdata.pop(0)
-        #current_font   = newdata.pop(0)
-        update_font()
-        return True
-    except Exception as e:
-        if not silent: print(e)
-        return False
-        
-    #return newdata.pop(0), newdata.pop(0)
-
-def save_current_font():
-    filename = "settings.ini"
-    f = open(filename,"w")
-    f.write(font_name()  +"\n")
-    f.close()
+           allcaps,\
+           current_kerning
+    filename="fonts"+os.sep+font_name()[:-4]+".ini"
+    ini = QuickIni(filename)
+    ini.load()
     
-def load_current_font():
-    global current_font
+    font_hsep = ini.get("font_hsep",1)
+    font_vsep = ini.get("font_vsep",1)
+    spacesize = 3>ini>"spacesize"
+    allcaps   = 5>ini>"capsstate"
+    current_kerning  = 0>ini>"kerning_type"
+    update_font()
+
+def save_global_options():
+    filename = "settings.ini"    
+    ini = QuickIni(filename)
+    ini += "font_name",font_name()
+    ini += "font_x0",font_x0
+    #ini += "current_height",current_height
+    #ini += "current_width",current_width
+    ini.save()
+    
+def load_global_options():
+    global current_font, font_x0, font_y0
     filename = "settings.ini"
+    ini = QuickIni(filename)
     try:
-        f = open(filename,"r")
-        data=f.readline().strip()#[int(x) for x in f.realines()]
-        f.close()
-        current_font = FONT_TYPES.index(data)
-    except Exception as e:
-        print(e)
+        ini.load()
+    except:
+        pass
+    current_font = FONT_TYPES.index(ini.get("font_name",font_name()).strip())
+    font_x0 = ini/("font_x0",7)
+    font_y0 = ini/("font_y0",7)
 
 def subimage(sheet, l, t, r, b):
     #https://stackoverflow.com/questions/16579674/using-spritesheets-in-tkinter
@@ -429,8 +476,8 @@ def touch_average_kerning_generate(fontid=None):
                     rightimage = ALLcharacters[fontid][sec]
                     lw, lh = leftimage.width(), leftimage.height()
                     rw, rh = rightimage.width(), rightimage.height()
-                    left_limit = lw*2/3
-                    right_limit = rw*2/3
+                    left_limit = floor(lw*2/3)
+                    right_limit = floor(rw*2/3)
                     avsum = 0
                     avdiv = 0
                     for j in range(min(lh, rh)):
@@ -841,7 +888,7 @@ def create_optionswindow(root,size_callback):
         def ftfun(*args):
             global current_font
             current_font = FONT_TYPES.index(ftvar.get())
-            save_current_font()
+            save_global_options()
             load_and_update() #changing fonts can change the options
             update_font()
             size_callback()
@@ -883,13 +930,13 @@ if(__name__ == "__main__"):
     load_mini_fonts()
     try:
         #canvaswidth,canvasheight=
-        load_current_font()
+        load_global_options()
         if(not load_font_options("fonts"+os.sep+font_name()[:-4])):
             #Try to load specific options, otherwise load default ones
             load_font_options(silent=False)
     except Exception as e:
         print(e)
-        pass
+        raise(e)
     canvaswidth = DEF_CANVAS[0]
     canvasheight = DEF_CANVAS[1]
     
