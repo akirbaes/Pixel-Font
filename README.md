@@ -8,13 +8,28 @@
 
 Otherwise:
 
+> PIL: `pip install pillow`
+>
 > pyscreenshot: `pip install pyscreenshot`
 >
-> PIL: `pip install pillow`
+> win32clipboard (optional): `pip install pywin32`
 >
 > `python font_visualizer.pyw`
 
 Then just add your fonts to the /fonts folder to use them in the program!
+
+## Features
+
+* Easily visualize and tweak your pixel-font text
+
+* Take pictures, copy to clipboard, or use the generated JSON to load it elsewhere
+
+* Generate missing accents
+
+* Letter spacing/automatic kerning options (offsets generated as separate JSON)
+
+![Letter Spacing/Kerning algos: Fixed Width, Bounding Box, Pack in X, Diagonals Fit, Pixel Distance, Average Area](images/readme/compact_kerningalgospresent.png)
+
 
 ## What's needed:
 
@@ -43,7 +58,7 @@ font_visualizer.py in the root will scan for .png in the /fonts folder and load 
 
 The text is customizable and there are many options to change. Options are saved per-font!
 
-![Visual of the options window](images/readme/optionswindow_screenshot.png)
+![Visual of the options window](images/readme/optionswindow_screenshot_08-01-20.png)
 
 
 ## Accents
@@ -60,15 +75,25 @@ Result:
 
 If you are unhappy with the result, you can still provide the accented characters yourself.
 
+## Generated files:
+
+* YourFont.ini will contain basic font options (horizontal and vertical separations, size of space character, case changes, used spacing/kerning arlgorithm).
+
+* YourFont.json will contain the position of every letter in YourFont.png in the form of 'A' : [x, y, width, height] where 'A' is a string of length 1, plus some other data (background color, max width and height).
+
+*  YourFont.Kern\* will contain the offset for each kerning pair it detected in the form of "AZ" : offset where "AZ3 is a string of length 2. To add to the horizontal separation found in YourFont.ini and the width of the character found in YourFont.json.
+
 ## Other secrets: 
 
-- put "mono" in the file name to force the font to work as a monospace font. The width uses the widest available character.
+- Fixed Width mode uses the widest available character at hsep=0. 
 
-- the font character size is aligned horizontally based on the leftmost and rightmost pixel for each character. If you want some control over the alignment, put "aligned" in the file name to align based on the pixel accross all characters that is the most on the left.
+- Hsep is not added to space size.
 
-- the .json file of your font's name is automatically generated the first time you use it. It contains all the positions of your characters (x,y,w,h), and the background color. You can edit it if you still feel that the automatic cropping failed.
+- The font character size is aligned horizontally based on the leftmost and rightmost pixel for each character. If you want some control over the alignment, put "aligned" in the file name to align based on the pixel accross all characters that is the most on the left.
 
+- The .json file of your font's name is automatically generated the first time you use it. It contains all the positions of your characters (x,y,w,h), and the background color. You can edit it if you still feel that the automatic cropping failed. 
 
+- Same for the kerning values, but they are only re-generated if you click "Save Options".
 
 ----
 

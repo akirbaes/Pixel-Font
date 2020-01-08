@@ -613,6 +613,7 @@ def kerning_filename(font_id,kerning_id):
     return filename
     
 def set_kerning(kerning_id):
+    #Order: remember temp kerning, load existing kerning, regenerate kerning.
     font_id = current_font
     global kerning_data, current_kerning
     kerning_data = temp_kernings.get(kerning_filename(font_id,kerning_id),None)
@@ -879,10 +880,6 @@ def create_optionswindow(root,size_callback):
         radioframe=Frame(leftframe)
         for index,text in enumerate(("No","CAP","low")):
             rb = Radiobutton(radioframe, text=text,variable=capvar, value=index)
-            print(index,force_case)
-            if(index==force_case):
-                print("selected",text)
-                rb.select()
             rb.pack(side=LEFT)
         def capfun(*args):
             global force_case
