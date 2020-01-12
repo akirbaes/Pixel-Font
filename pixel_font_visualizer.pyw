@@ -97,22 +97,26 @@ def save_font_options(): #current_height, current_width):
         save_json(kerning_filename(current_font,current_kerning),kerning_data)
     
 def load_font_options(filename="default_options",silent=True):
-    global font_hsep,\
-           font_vsep,\
-           spacesize,\
-           force_case,\
-           current_kerning
-    filename="fonts"+os.sep+font_name()[:-4]+".ini"
-    ini = QuickIni(filename)
-    ini.load()
-    
-    font_hsep = ini.get("font_hsep",1)
-    font_vsep = ini.get("font_vsep",2)
-    spacesize = 3>ini>"spacesize"
-    force_case   = 0>ini>"capsstate"
-    current_kerning  = 1>ini>"kerning"
-    update_font()
-    set_kerning(current_kerning)
+    try:
+        global font_hsep,\
+               font_vsep,\
+               spacesize,\
+               force_case,\
+               current_kerning
+        filename="fonts"+os.sep+font_name()[:-4]+".ini"
+        ini = QuickIni(filename)
+        ini.load()
+        
+        font_hsep = ini.get("font_hsep",1)
+        font_vsep = ini.get("font_vsep",2)
+        spacesize = 3>ini>"spacesize"
+        force_case   = 0>ini>"capsstate"
+        current_kerning  = 1>ini>"kerning"
+        update_font()
+        set_kerning(current_kerning)
+    except Exception as e:
+        print(e)
+        pass
 
 def save_global_options():
     filename = "settings.ini"    
@@ -393,7 +397,7 @@ def distance_touch_kerning_generate(fontid=None,distance=None):
                             dx=leftsides[lj]+ri
                             if(dy<=distance):
                                 kerning = min(kerning, floor(dx-sqrt(distance**2-dy**2)))
-                    if(kerning!=0):
+                    if(kerning+font_hsep!=0):
                         kerning_data[first+sec]=kerning+font_hsep
     return kerning_data
 from statistics import median
