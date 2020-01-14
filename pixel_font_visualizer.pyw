@@ -61,6 +61,7 @@ def update_font(font_id = None):
 FONT_WIDTH = 2
 FONT_HEIGHT = 4
 FONT_BACKGROUND = "black"
+SKIP_MISSING = True
 spacesize = 1
 font_hsep = 0
 font_vsep = 1
@@ -209,87 +210,6 @@ except Exception as e:
     print("Clipboard capabilities not enabled, try\n\t pip install pywin32")
 
     
-def get_char_image(char):
-    return ALLcharacters[current_font].get(char,None)
-
-def lines_height(lines):
-    return lines*FONT_HEIGHT+(max(0,lines-1))*font_vsep
-    
-def word_width(word):
-    xlong = 0
-    for char in word:
-        if(char == " "):
-            xlong+=spacesize
-        else:
-            xlong+=get_char_width(char)+font_hsep
-    xshort = xlong
-    for i in range(len(word)-1,-1,-1):
-        if(word[i]==" "):
-            xshort-=spacesize
-        else:
-            break
-    xshort-=font_hsep
-    return xlong, xshort
-    
-def cut_word(word,pixels_width):
-    cutoff = len(word)
-    for i in range(len(word)):
-        xlong,xshort = word_width(word[:i])
-        if(xshort>pixels_width):
-            cutoff=i-1
-            #print(xshort,word[:cutoff])
-            break
-    cutoff=max(cutoff,1)
-    return word[:cutoff], word[cutoff:]
-    
-def wrap_text(pixels_width, pixels_height, text, leave_early = False):
-    #print("force_case is:",force_case)
-    if(force_case==1):
-        text = text.upper()
-    elif(force_case==2):
-        text = text.lower()
-    lines = text.split("\n")
-    ans = []
-    #print("Width:",pixels_width)
-    pixels_width = max(FONT_WIDTH+font_hsep,pixels_width)
-    #print("Corrected:",pixels_width)
-    #print("Font width:",FONT_WIDTH)
-    #print("Hsep:",font_hsep)
-    #print("Spacesize:",spacesize)
-    #flush()
-    for line in lines:
-        w = 0
-        ansline = ""
-        line=line.replace(" !","\t!")
-        line=line.replace(" ?","\t?")
-        words = line.split(" ")
-        flush()
-        while(len(words)>0):
-            word = words.pop(0)
-            word = word.replace("\t"," ")
-            xlong, xshort = word_width(word)
-            if(w+xshort>pixels_width):
-                if(ansline == ""):
-                    cutword,nextword = cut_word(word,pixels_width)
-                    #print("Cut:",cutword,"+",nextword)
-                    flush()
-                    ansline=cutword
-                    word = nextword
-                #print("Cut in ",ansline,"+",word)
-                ans.append(ansline)
-                if(lines_height(len(ans)+1)>pixels_height and leave_early):
-                    return ans
-                ansline = ""
-                words.insert(0,word)
-                w=0
-            else:
-                ansline+=word+" "
-                w+=xlong+spacesize
-                
-        ans.append(ansline)
-        if(lines_height(len(ans)+1)>pixels_height and leave_early):
-            return ans
-    return ans
 
 def touch_kerning_generate(fontid=None):
     #x-axis touch
@@ -452,15 +372,15 @@ def touch_average_kerning_generate(fontid=None):
             kerning_data.pop(k)
     return kerning_data
                     
-                    
-def measure(wrapped_text):
+def text_data_measure(text_data):
     measured_width = 0
-    measured_height = 0
-    for index, line in enumerate(wrapped_text):
-        xlong,xshort=word_width(line)
-        measured_width = max(xshort,measured_width)
-    measured_height = lines_height(len(wrapped_text))
+    for line in text_data:
+        measured_width=max(text_data_line_width(line),measured_width)
+    measured_height = lines_height(len(text_data))
+    print(len(text_data),"lines")
+    print(text_data)
     return measured_width,measured_height
+    
 
 try:    from unidecode import unidecode
 except Exception as e: print(e)
@@ -489,8 +409,10 @@ accent_bases={
 "äÄëËïÏöÖüÜÿŸ"  :"¨",
 "åÅ"            :"°",
 "ãÃõÕñÑ"        :"~"
+
 }
 
+	
 all_accents="áÁéÉíÍóÓúÚàÀèÈìÌòÒùÙâÂêÊîÎôÔûÛäÄëËïÏöÖüÜÿŸåÅãÃõÕñÑ"
 all_accents="ÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜàáâãäåèéêëìíîïñòóôõöùúûüÿŸ"
 #https://www.fonts.com/content/learning/fontology/level-3/signs-and-symbols/accents
@@ -515,89 +437,275 @@ def image_bottom(image):
                 return image.height()-j
     return image.height()
 
-def draw_text(canvas,wrapped_text,vscroll=None):
-    if(vscroll==None):
-        top=0
-        bottom=float("inf")
-    else:
-        top,bottom=vscroll.get()
-        top=top*len(wrapped_text)
-        bottom=bottom*len(wrapped_text)
-    for index, line in enumerate(wrapped_text):
-        x=font_x0
-        y=font_y0+index*(FONT_HEIGHT+font_vsep)
+
+def get_char_image(char):
+    return ALLcharacters[current_font].get(char,None)
+
+def lines_height(lines):
+    return lines*FONT_HEIGHT+(max(0,lines-1))*font_vsep
     
-        #if(y>canvas.winfo_height()):
-        #    break #FIND A BETTER WAY TO OPTIMISE THIS
-        """if(index<top):
-            continue
-        if(index>bottom):
-            break"""
-        p_letter = "None"
-        for letter in line:
-            kerning = 0
-            if(letter==" "):
-                x+=spacesize
+def word_width(word):
+    xlong = 0
+    for char in word:
+        if(char == " "):
+            xlong+=spacesize
+        else:
+            xlong+=get_char_width(char)+font_hsep
+    xshort = xlong
+    for i in range(len(word)-1,-1,-1):
+        if(word[i]==" "):
+            xshort-=spacesize
+        else:
+            break
+    xshort-=font_hsep
+    return xlong, xshort
+    
+def cut_word(word,pixels_width):
+    cutoff = len(word)
+    for i in range(len(word)):
+        xlong,xshort = word_width(word[:i])
+        if(xshort>pixels_width):
+            cutoff=i-1
+            #print(xshort,word[:cutoff])
+            break
+    cutoff=max(cutoff,1)
+    return word[:cutoff], word[cutoff:]
+    
+def wrap_text(pixels_width, pixels_height, text, leave_early = False):
+    #print("force_case is:",force_case)
+    if(force_case==1):
+        text = text.upper()
+    elif(force_case==2):
+        text = text.lower()
+        
+    text=text.replace(" !","\t!")
+    text=text.replace(" ?","\t!")
+    lines = text.split("\n")
+    
+    #print("Width:",pixels_width)
+    pixels_width = max(FONT_WIDTH+font_hsep,pixels_width)
+    #print("Corrected:",pixels_width)
+    #print("Font width:",FONT_WIDTH)
+    #print("Hsep:",font_hsep)
+    #print("Spacesize:",spacesize)
+    #flush()
+    datalines = []
+    for textline in lines:
+        current_width = 0
+        current_line = []
+        words = textline.split(" ")
+        
+        while(len(words)>0):
+            word = words.pop(0)
+            word = word.replace("\t"," ")
+            word_data = []
+            for i,letter in enumerate(word):
+                letter = word[i]
+                if(i+1==len(word)):
+                    next_letter=None
+                else:
+                    next_letter = word[i+1]
+                word_data.extend(determine_character(letter,next_letter,missing_character_character))
+            word_width = text_data_line_width(word_data)-font_hsep
+            if(current_width+word_width<=pixels_width):
+                #Word fits
+                current_width+=word_width+determine_character(" ")[0][1]
+                current_line.extend(word_data)
+                current_line.extend(determine_character(" "))
+            elif(current_width==0):
+                #Pixel width too small for even one word
+                word_width = 0
+                result_index = 0
+                for index,(chr,shift) in enumerate(word_data):
+                    word_width+=shift
+                    if(word_width>pixels_width):
+                        break
+                    result_index = index
+                partial_word = word_data[:result_index+1] ###What about accents? #We are already in a special case anyway
+                #print("PARTIAL WORD:",word[:result_index+1])
+                words.insert(0,word[result_index+1:])
+                
+                
+                # text_data_trim_end_spaces(partial_word)
+                # text_data_trim_lead_spaces(partial_word)
+                datalines.append(partial_word)
+                current_width = 0
+                current_line=[]
             else:
-                char_image = get_char_image(letter)
-                if(char_image==None and letter in all_accents and superpose_missing_accents):
-                    try:
-                        letter_base, accent_base = None, None
-                        for key in letter_bases:
-                            if(letter in key):
-                                letter_base=letter_bases[key]
-                                break
-                        for key in accent_bases:
-                            if(letter in key):
-                                accent_base=accent_bases[key]
-                                break
-                        char_image = get_char_image(letter_base) or get_char_image(unidecode(letter_base))
-                        accent_image = get_char_image(accent_base)
-                        if(char_image.width()>accent_image.width()):
-                            letter = unidecode(letter_base)
-                        else:
-                            letter = accent_base
-                        
-                        #print("Accented letter:",letter_base,"+",accent_base)
-                        
-                        #canvas.create_image(x, y, anchor=NW, image=letter_image)
-                        top=image_top(char_image)
-                        bottom = image_bottom(accent_image)
-                        # print("Top:",top," - Bottom:",bottom)
-                        #bottom=accent_image.height()
-                        h_shift = round(float(char_image.width()-accent_image.width())/2)
-                        v_shift = top-bottom-accent_vertical_gap
-                        
-                        # print("Width letter:",get_char_width(letter_base)," - Width accent:",get_char_width(accent_base))
-                        # print("h_shift:",h_shift)
-                        canvas.create_image(x+h_shift, y+v_shift, anchor=NW, image=accent_image)
-                    except Exception as e:
-                        pass
-                        #print(e)
-                if(char_image==None and fill_missing_with_unidecode):
-                    # print("Could not find replacement for accent",letter)
-                    letter=unidecode(letter)
-                    char_image = get_char_image(letter)
-                    # print(letter,char_image)
-                if(letter=="I" and get_char_image("İ")!=None):
-                    char_image = get_char_image("İ")
-                if(char_image==None):
-                    #print("Could not find character",letter,"in",ALLcharacters[current_font])
-                    letter=missing_character_character
-                    char_image = get_char_image(letter)
-                if(char_image!=None):
-                    if(isinstance(kerning_data,dict)):
-                        kerning = kerning_data.get(p_letter+letter,0)
-                    elif(current_kerning==K_BBOX):
-                            kerning==0
-                    elif(current_kerning==K_MONO):
-                        kerning = (get_char_width(letter)-FONT_WIDTH)//2
-                            
-                    canvas.create_image(x-kerning, y, anchor=NW, image=char_image)
-                if(current_kerning==K_MONO):
-                    kerning = get_char_width(letter)-FONT_WIDTH
-                x+=get_char_width(letter)+font_hsep-kerning
-            p_letter = letter
+                #First word of next line
+                text_data_trim_end_spaces(current_line)
+                # text_data_trim_lead_spaces(current_line)
+                datalines.append(current_line)
+                current_width = 0
+                current_line=[]
+                words.insert(0,word)
+        if(current_width>0):
+            #No more words to process in line.
+            text_data_trim_end_spaces(current_line)
+            # text_data_trim_lead_spaces(current_line)
+            datalines.append(current_line)
+            current_width=0
+            current_line=[]
+                
+        if(lines_height(len(datalines)+1)>pixels_height and leave_early):
+            #print("early",datalines)
+            return datalines
+            
+    #print("Datalines",len(datalines),datalines)
+    return datalines
+    
+def determine_character(letter,next_letter=None,missing_letter_character=None):
+    #returns a list of characters (because of accents)
+    accent_image = None
+    accent_width = None
+    accent_shift = None
+    kerning = 0
+    if(letter==" "):
+        return [(None,spacesize)]
+    else:
+        char_image = get_char_image(letter)
+        if(char_image==None and letter in all_accents and superpose_missing_accents):
+            #Returns a [Base, Accent] pair
+            try:
+                letter_base, accent_base = None, None
+                for key in letter_bases:
+                    if(letter in key):
+                        letter_base=letter_bases[key]
+                        break
+                for key in accent_bases:
+                    if(letter in key):
+                        accent_base=accent_bases[key]
+                        break
+                char_image = get_char_image(letter_base) or get_char_image(unidecode(letter_base))
+                accent_image = get_char_image(accent_base)
+                accent_width = get_char_width(accent_base)
+                #print("Accented letter:",letter_base,"+",accent_base)
+                
+                #canvas.create_image(x, y, anchor=NW, image=letter_image)
+                top=image_top(char_image)
+                bottom = image_bottom(accent_image)
+                # print("Top:",top," - Bottom:",bottom)
+                #bottom=accent_image.height()
+                h_shift = round(float(char_image.width()-accent_image.width())/2)
+                accent_shift = top-bottom-accent_vertical_gap
+                # print("Width letter:",get_char_width(letter_base)," - Width accent:",get_char_width(accent_base))
+                # print("h_shift:",h_shift)
+                #canvas.create_image(x+h_shift, y+v_shift, anchor=NW, image=accent_image)
+                
+            except Exception as e:
+                import traceback
+                print(e)
+                traceback.print_exc()
+        
+        if(letter=="I" and get_char_image("İ")!=None):
+            char_image = get_char_image("İ")
+            letter = "İ"
+            
+        if(char_image==None and letter=="I" and get_char_image("İ")!=None):
+            #In case the text contains I but only İ is given, it is replaceable
+            char_image = get_char_image("İ")
+            letter = "İ"
+            
+        if(char_image==None and fill_missing_with_unidecode):
+            # print("Could not find replacement for ",letter)
+            letter=unidecode(letter)
+            char_image = get_char_image(letter)
+            # print(letter,char_image)
+            
+        if(char_image==None):
+            #print("Could not find character",letter,"in",ALLcharacters[current_font])
+            if(SKIP_MISSING):
+                return([])
+            elif(missing_letter_character==None):
+                return [(None,spacesize)]
+            else:
+                return determine_character(missing_letter_character,next_letter,None)
+            
+        if(char_image!=None):
+            width = char_image.width()
+            
+            if(isinstance(kerning_data,dict)):
+                kerning = kerning_data.get(letter+str(next_letter),0)
+            elif(current_kerning==K_BBOX):
+                kerning==0
+            elif(current_kerning==K_MONO):
+                width = FONT_WIDTH
+                kerning = 0
+            if(accent_image):
+                decal = (width-accent_width)//2
+                return [(char_image,decal),((accent_image,accent_shift),width-kerning+font_hsep-decal)]
+            else:
+                return [(char_image,width-kerning+font_hsep)]
+    return []
+    
+
+            
+def text_data_line_width(text_data_line):
+    x=0
+    for ch_image,shift in text_data_line:
+        x+=shift
+    return x
+
+def text_data_count_spaces(text_data_line):
+    count = 0
+    for ch_image,shift in text_data_line:
+        if ch_image==None:
+            count+=1
+    return count
+def text_data_trim_end_spaces(text_data_line):
+    while(text_data_line and text_data_line[-1][0]==None):
+        text_data_line.pop(-1)
+def text_data_trim_lead_spaces(text_data_line):
+    while(text_data_line and text_data_line[0][0]==None):
+        text_data_line.pop(0)
+LEFT_ALIGN = 0
+CENTER_ALIGN = 1
+RIGHT_ALIGN = 2
+JUSTIFY_ALIGN = 3
+def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
+    #Draw the text data that already has been kerned and wrapped by the previous function
+    alignment = JUSTIFY_ALIGN
+    #print("Received",text_data)
+    #print("Draw it in",drawarea_width)
+    y=font_y0
+    for line in text_data:
+        #print("Line",y,line)
+        #print("Before trim:")
+        #print(line)
+        #text_data_trim_end_spaces(line)
+        #text_data_trim_lead_spaces(line)
+        #print("After trim:")
+        #print(line)
+        x=font_x0
+        linewidth = text_data_line_width(line)
+        if(alignment==CENTER_ALIGN):
+            x+=(drawarea_width-linewidth)//2
+        elif(alignment==RIGHT_ALIGN):
+            x+=drawarea_width-linewidth
+        elif(alignment==JUSTIFY_ALIGN):
+            align_missing = drawarea_width-linewidth
+            align_shifted=0
+            align_counter=0
+            align_step = align_missing/max(text_data_count_spaces(line),1)
+        for ch_image,shift in line:
+            if(ch_image!=None):
+                if(isinstance(ch_image,tuple)):
+                    #accent with height
+                    ch_image,height = ch_image
+                    canvas.create_image(x, y+height, anchor=NW, image=ch_image)
+                else:
+                    canvas.create_image(x, y, anchor=NW, image=ch_image)
+            x+=shift
+            if(alignment==JUSTIFY_ALIGN and ch_image==None):
+                #On spaces, fill the missing void by integer amount until the max amount is reached
+                align_counter+=align_step
+                difference = min(round(align_counter-align_shifted),align_missing-align_shifted)
+                align_shifted+=difference
+                x+=difference 
+                #SHOULD not justify is single line doesn't reach the end.
+                #Only justify if wrapped around - so more infos are needed
+        y+=FONT_HEIGHT+font_vsep
+    
 K_BBOX = 1
 K_MONO = 0
 K_PACKX = 2
@@ -827,7 +935,7 @@ def create_optionswindow(root,size_callback):
         
         def recaplabel_update():
             recapbglabel.config(text="Font bg: "+str(FONT_BACKGROUND))
-            recapsizelabel.config(text="Size: "+str(FONT_WIDTH)+"x"+str(FONT_HEIGHT))
+            recapsizelabel.config(text="Size: "+str(FONT_WIDTH)+"×"+str(FONT_HEIGHT))
         recaplabel_update()
         
         Label(leftframe,text="Horizontal separation").pack(side=TOP)
@@ -1016,7 +1124,7 @@ Is it not proof that I possess the stone of life?""")
     def redraw():
         mycanvas.current_after = None
         mycanvas.delete("all")
-        draw_text(mycanvas,wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get()),vbar)
+        draw_text_data(mycanvas,int(widthBox.get()),wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get()),vbar)
     def change_callback(*args):
         if(mycanvas.current_after != None):
             mycanvas.after_cancel(mycanvas.current_after)
@@ -1069,8 +1177,8 @@ Is it not proof that I possess the stone of life?""")
     
     
     def fitToText():
-        wrapped_text = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
-        w,h = measure(wrapped_text)
+        wrapped_text_data = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
+        w,h = text_data_measure(wrapped_text_data)
         #print("Measure answer:",w,h)
         #print("Widthbox:",widthBox.get(),heightBox.get())
         #print("Canvas:",mycanvas.winfo_width(),mycanvas.winfo_height())
@@ -1079,8 +1187,8 @@ Is it not proof that I possess the stone of life?""")
         #except:
         #    pass
         #flush()
-        widthVar.set(w)#min(w,root.winfo_screenwidth()-root.winfo_width()-root.winfo_x()+mycanvas.winfo_width()))
-        heightVar.set(h)#min(h,root.winfo_screenheight()-root.winfo_height()-root.winfo_y()+mycanvas.winfo_height()))
+        widthVar.set(int(w))#min(w,root.winfo_screenwidth()-root.winfo_width()-root.winfo_x()+mycanvas.winfo_width()))
+        heightVar.set(int(h))#min(h,root.winfo_screenheight()-root.winfo_height()-root.winfo_y()+mycanvas.winfo_height()))
         
         
     #FIT button
