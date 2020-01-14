@@ -83,7 +83,7 @@ LEFT_ALIGN = 0
 CENTER_ALIGN = 1
 RIGHT_ALIGN = 2
 JUSTIFY_ALIGN = 3
-alignment = JUSTIFY_ALIGN
+alignment = LEFT_ALIGN
 
 def font_name(id=None):
     if(id==None):
@@ -99,6 +99,7 @@ def save_font_options(): #current_height, current_width):
     ini+= "spacesize",spacesize
     ini+= "capsstate",force_case
     ini+= "kerning",current_kerning
+    ini+= "alignment", alignment
     ini.save()
     if(isinstance(kerning_data,dict)):
         save_json(kerning_filename(current_font,current_kerning),kerning_data)
@@ -109,16 +110,18 @@ def load_font_options(filename="default_options",silent=True):
                font_vsep,\
                spacesize,\
                force_case,\
-               current_kerning
+               current_kerning,\
+               alignment
         filename="fonts"+os.sep+font_name()[:-4]+".ini"
         ini = QuickIni(filename)
         ini.load()
         
         font_hsep = ini.get("font_hsep",1)
         font_vsep = ini.get("font_vsep",2)
-        spacesize = 3>ini>"spacesize"
-        force_case   = 0>ini>"capsstate"
-        current_kerning  = 1>ini>"kerning"
+        spacesize = ini.get("spacesize",3)
+        force_case   = ini.get("capsstate",0)
+        current_kerning  = ini.get("kerning",1)
+        alignment  = ini/"alignment"/0
         update_font()
         set_kerning(current_kerning)
     except Exception as e:
@@ -144,8 +147,8 @@ def load_global_options():
     except:
         pass
     current_font = FONT_TYPES.index(ini.get("font_name",font_name()).strip())
-    font_x0 = ini/("font_x0",7)
-    font_y0 = ini/("font_y0",7)
+    font_x0 = ini/"font_x0"/7
+    font_y0 = ini/"font_y0"/7
 
 def subimage(sheet, l, t, r, b):
     #https://stackoverflow.com/questions/16579674/using-spritesheets-in-tkinter
@@ -498,7 +501,7 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
     datalines = []
     for textline in lines:
         current_width = 0
-        current_line = []
+        current_line = [("BeginLine",0)]
         words = textline.split(" ")
         
         while(len(words)>0):
@@ -531,7 +534,6 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
                 #print("PARTIAL WORD:",word[:result_index+1])
                 words.insert(0,word[result_index+1:])
                 
-                
                 # text_data_trim_end_spaces(partial_word)
                 # text_data_trim_lead_spaces(partial_word)
                 datalines.append(partial_word)
@@ -539,16 +541,20 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
                 current_line=[]
             else:
                 #First word of next line
-                text_data_trim_end_spaces(current_line)
                 # text_data_trim_lead_spaces(current_line)
+                words.insert(0,word)
+                if(alignment!=RIGHT_ALIGN):
+                    text_data_trim_end_spaces(current_line)
+                while(words and words[0] == ""):
+                    words.pop(0)
                 datalines.append(current_line)
                 current_width = 0
                 current_line=[]
-                words.insert(0,word)
         if(current_width>0):
             #No more words to process in line.
             text_data_trim_end_spaces(current_line)
             # text_data_trim_lead_spaces(current_line)
+            current_line.append(("EndOfLine",0))
             datalines.append(current_line)
             current_width=0
             current_line=[]
@@ -689,12 +695,20 @@ def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
             align_shifted=0
             align_counter=0
             align_step = align_missing/max(text_data_count_spaces(line),1)
+        if(('EndOfLine',0) in line):
+            align_step=0
+            line.remove(("EndOfLine",0))
+        if(('BeginLine',0) in line):
+            pass #Might be useful at a later time
+            line.remove(("BeginLine",0))
         for ch_image,shift in line:
             if(ch_image!=None):
                 if(isinstance(ch_image,tuple)):
                     #accent with height
                     ch_image,height = ch_image
                     canvas.create_image(x, y+height, anchor=NW, image=ch_image)
+                elif(isinstance(ch_image,str)):
+                    pass #some sort of info 
                 else:
                     canvas.create_image(x, y, anchor=NW, image=ch_image)
             x+=shift
@@ -1026,7 +1040,7 @@ def create_optionswindow(root,size_callback):
             size_callback()
         radioframe.pack(side=TOP)
         alignvar.trace("w",alignfun)
-        alignvar.set(force_case)
+        alignvar.set(alignment)
         
         
         
@@ -1046,6 +1060,7 @@ def create_optionswindow(root,size_callback):
             spvar.set(spacesize)
             capvar.set(force_case)
             kernvar.set(kerning_full_name(current_kerning))
+            alignvar.set(alignment)
             recaplabel_update()
             #ftvar.set(FONT_TYPES[current_font])
             
