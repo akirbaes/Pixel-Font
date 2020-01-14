@@ -515,7 +515,7 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
             word_width = text_data_line_width(word_data)-font_hsep
             if(current_width+word_width<=pixels_width):
                 #Word fits
-                current_width+=word_width+determine_character(" ")[0][1]
+                current_width+=word_width+font_hsep+determine_character(" ")[0][1]
                 current_line.extend(word_data)
                 current_line.extend(determine_character(" "))
             elif(current_width==0):
@@ -679,7 +679,7 @@ def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
         #print("After trim:")
         #print(line)
         x=font_x0
-        linewidth = text_data_line_width(line)
+        linewidth = text_data_line_width(line)-font_hsep
         if(alignment==CENTER_ALIGN):
             x+=(drawarea_width-linewidth)//2
         elif(alignment==RIGHT_ALIGN):
@@ -980,12 +980,20 @@ def create_optionswindow(root,size_callback):
         
         Label(rightframe,text="Space character width").pack(side=TOP)
         spvar = IntVar(value=spacesize)
-        Spinbox(rightframe,textvariable = spvar,width=3, from_=0, to=128).pack(side=TOP)
+        
+        spaceframe = Frame(rightframe)
+        spaceframe.pack(side=TOP)
+        
+        Spinbox(spaceframe,textvariable = spvar,width=3, from_=0, to=128).pack(side=LEFT)
         def spfun(*args):
             global spacesize
             spacesize = spvar.get()
             size_callback()
         spvar.trace("w",spfun)
+        
+        def setmonospace(*args):
+            spvar.set(FONT_WIDTH+font_hsep)
+        Button(spaceframe,text="Width+HSep",command=setmonospace).pack(side=LEFT)
         
         
         Label(leftframe,text="Convert case").pack(side=TOP)
@@ -1009,7 +1017,7 @@ def create_optionswindow(root,size_callback):
         alignvar = IntVar(value=alignment)
         #Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
         radioframe=Frame(leftframe)
-        for index,text in enumerate(("|←","→|←","→|","|↔|")):
+        for index,text in enumerate(("←","→←","→","↔")):
             rb = Radiobutton(radioframe, text=text,variable=alignvar, value=index)
             rb.pack(side=LEFT)
         def alignfun(*args):
@@ -1199,8 +1207,15 @@ Is it not proof that I possess the stone of life?""")
     
     
     def fitToText():
+        print("Sent",int(widthBox.get()),int(heightBox.get()))
         wrapped_text_data = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
         w,h = text_data_measure(wrapped_text_data)
+        w-=font_hsep
+        print("Received",w,h)
+        wrapped_text_data = wrap_text(w,h,text=windowText.get(),leave_early=False)
+        w,h = text_data_measure(wrapped_text_data)
+        w-=font_hsep
+        print("Received2",w,h)
         #print("Measure answer:",w,h)
         #print("Widthbox:",widthBox.get(),heightBox.get())
         #print("Canvas:",mycanvas.winfo_width(),mycanvas.winfo_height())
