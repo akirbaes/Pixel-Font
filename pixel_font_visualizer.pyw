@@ -79,6 +79,12 @@ current_kerning = 1
 kerning_data = "BBox"
 temp_kernings = dict()
 
+LEFT_ALIGN = 0
+CENTER_ALIGN = 1
+RIGHT_ALIGN = 2
+JUSTIFY_ALIGN = 3
+alignment = JUSTIFY_ALIGN
+
 def font_name(id=None):
     if(id==None):
         id=current_font
@@ -377,8 +383,8 @@ def text_data_measure(text_data):
     for line in text_data:
         measured_width=max(text_data_line_width(line),measured_width)
     measured_height = lines_height(len(text_data))
-    print(len(text_data),"lines")
-    print(text_data)
+    #print(len(text_data),"lines")
+    #print(text_data)
     return measured_width,measured_height
     
 
@@ -658,13 +664,9 @@ def text_data_trim_end_spaces(text_data_line):
 def text_data_trim_lead_spaces(text_data_line):
     while(text_data_line and text_data_line[0][0]==None):
         text_data_line.pop(0)
-LEFT_ALIGN = 0
-CENTER_ALIGN = 1
-RIGHT_ALIGN = 2
-JUSTIFY_ALIGN = 3
+
 def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
     #Draw the text data that already has been kerned and wrapped by the previous function
-    alignment = JUSTIFY_ALIGN
     #print("Received",text_data)
     #print("Draw it in",drawarea_width)
     y=font_y0
@@ -672,8 +674,8 @@ def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
         #print("Line",y,line)
         #print("Before trim:")
         #print(line)
-        #text_data_trim_end_spaces(line)
-        #text_data_trim_lead_spaces(line)
+        text_data_trim_end_spaces(line)
+        text_data_trim_lead_spaces(line)
         #print("After trim:")
         #print(line)
         x=font_x0
@@ -1000,6 +1002,26 @@ def create_optionswindow(root,size_callback):
         radioframe.pack(side=TOP)
         capvar.trace("w",capfun)
         capvar.set(force_case)
+        
+        
+        
+        Label(leftframe,text="Alignment").pack(side=TOP)
+        alignvar = IntVar(value=alignment)
+        #Checkbutton(leftframe,text="",variable = capvar).pack(side=TOP)
+        radioframe=Frame(leftframe)
+        for index,text in enumerate(("|←","→|←","→|","|↔|")):
+            rb = Radiobutton(radioframe, text=text,variable=alignvar, value=index)
+            rb.pack(side=LEFT)
+        def alignfun(*args):
+            global alignment
+            alignment = alignvar.get()
+            size_callback()
+        radioframe.pack(side=TOP)
+        alignvar.trace("w",alignfun)
+        alignvar.set(force_case)
+        
+        
+        
         
         def save_and_clean():
             save_font_options()
