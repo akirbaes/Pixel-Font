@@ -488,7 +488,7 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
         text = text.lower()
         
     text=text.replace(" !","\t!")
-    text=text.replace(" ?","\t!")
+    text=text.replace(" ?","\t?")
     lines = text.split("\n")
     
     #print("Width:",pixels_width)
@@ -568,16 +568,17 @@ def wrap_text(pixels_width, pixels_height, text, leave_early = False):
     
 def determine_character(letter,next_letter=None,missing_letter_character=None):
     #returns a list of characters (because of accents)
+    #TODO check with timeit if it's better to use [] or ()
     accent_image = None
     accent_width = None
     accent_shift = None
     kerning = 0
     if(letter==" "):
-        return [(None,spacesize)]
+        return ((None,spacesize),)
     else:
         char_image = get_char_image(letter)
         if(char_image==None and letter in all_accents and superpose_missing_accents):
-            #Returns a [Base, Accent] pair
+            #Returns a (Base, Accent) pair
             try:
                 letter_base, accent_base = None, None
                 for key in letter_bases:
@@ -609,9 +610,9 @@ def determine_character(letter,next_letter=None,missing_letter_character=None):
                 print(e)
                 traceback.print_exc()
         
-        if(letter=="I" and get_char_image("İ")!=None):
-            char_image = get_char_image("İ")
-            letter = "İ"
+        # if(letter=="I" and get_char_image("İ")!=None):
+            # char_image = get_char_image("İ")
+            # letter = "İ"
             
         if(char_image==None and letter=="I" and get_char_image("İ")!=None):
             #In case the text contains I but only İ is given, it is replaceable
@@ -627,9 +628,9 @@ def determine_character(letter,next_letter=None,missing_letter_character=None):
         if(char_image==None):
             #print("Could not find character",letter,"in",ALLcharacters[current_font])
             if(SKIP_MISSING):
-                return([])
+                return(tuple())
             elif(missing_letter_character==None):
-                return [(None,spacesize)]
+                return ((None,spacesize),)
             else:
                 return determine_character(missing_letter_character,next_letter,None)
             
@@ -645,10 +646,10 @@ def determine_character(letter,next_letter=None,missing_letter_character=None):
                 kerning = 0
             if(accent_image):
                 decal = (width-accent_width)//2
-                return [(char_image,decal),((accent_image,accent_shift),width-kerning+font_hsep-decal)]
+                return ((char_image,decal),((accent_image,accent_shift),width-kerning+font_hsep-decal))
             else:
-                return [(char_image,width-kerning+font_hsep)]
-    return []
+                return ((char_image,width-kerning+font_hsep),)
+    return tuple()
     
 
             
@@ -722,8 +723,8 @@ def draw_text_data(canvas,drawarea_width,text_data,vscroll=None):
                 #Only justify if wrapped around - so more infos are needed
         y+=FONT_HEIGHT+font_vsep
     
-K_BBOX = 1
 K_MONO = 0
+K_BBOX = 1
 K_PACKX = 2
 K_DIAG = 3
 K_DIST = 4
@@ -1226,11 +1227,11 @@ Is it not proof that I possess the stone of life?""")
         wrapped_text_data = wrap_text(int(widthBox.get()),int(heightBox.get()),text=windowText.get(),leave_early=False)
         w,h = text_data_measure(wrapped_text_data)
         w-=font_hsep
-        print("Received",w,h)
-        wrapped_text_data = wrap_text(w,h,text=windowText.get(),leave_early=False)
-        w,h = text_data_measure(wrapped_text_data)
-        w-=font_hsep
-        print("Received2",w,h)
+        # print("Received",w,h)
+        # wrapped_text_data = wrap_text(w,h,text=windowText.get(),leave_early=False)
+        # w,h = text_data_measure(wrapped_text_data)
+        # w-=font_hsep
+        # print("Received2",w,h)
         #print("Measure answer:",w,h)
         #print("Widthbox:",widthBox.get(),heightBox.get())
         #print("Canvas:",mycanvas.winfo_width(),mycanvas.winfo_height())
