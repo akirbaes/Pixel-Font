@@ -1,0 +1,7 @@
+ABCDEFGHIJKLM
+NOPQRSTUVWXYZ
+0123456789.?!
+abcdefghijklm
+nopqrstuvwxyz
+()/\+-*•[],"µ
+~=           
