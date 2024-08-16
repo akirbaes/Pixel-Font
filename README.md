@@ -120,18 +120,18 @@ Three separate handwritten fonts scanned and aligned to make an animation. My pr
 
 A basic replacement cipher based on deformations of latin script.
 
-## **MicroRed** (shortened to µRed)
+## **Subpixel fonts**
 
-MicroRed is a 2x4 ascii colored font and probably close to the most compact font possible outside of a 3x3.
 
-### Variations: 
+|Font![separator](images/readme/thin_line.png) Sampletext | Preview photo |Description|
+|:---------|--|:-------|
+|![2x4 micro ascii font](images/readme/µRed_mono.png) ![µRed sample](images/readme/µred_mono_sample.png)|<img src="images/readme/µred_mono_photo.jpg" width="550"> | **µRed_Mono** (pronounced Micro-Red) has a fixed size of 2x4. Probably close to the most compact font possible outside of a 3x3.|
+|![Variable width and height micro ascii font](images/readme/µRed_wide_tall.png)![µRed sample](images/readme/µred_v2_sample.png)|<img src="images/readme/µred_v2_photo.jpg" width="550">|**µRed_v2** has variable width to allow for characters like W, M, N, H to be more readable. Characters like "g", "p", "q" and "," also hang one pixel lower for aesthetic purposes. |
+|![Cursive micro ascii font](images/readme/µCursive.png)![µCursive sample](images/readme/µcursive_sample.png) |<img src="images/readme/µcursive_photo.jpg" width="550">| **µCursive** is a mostly 3x5 cursive-style subpixel font that is somehow very readable (and green!). |
+|![3x3 alphanumeric font](images/readme/3x3_alphanum.png) ![3x3 sample](images/readme/3x3_alphanum_sample.png)|<img src="images/readme/3x3_alphanum_photo.jpg" width="550">| 3x3 alphanumeric font improved by using subpixels. |
+|![4x5 standard font](images/readme/standard_small_mono.png) ![4x5 sample](images/readme/4x5_small_mono_sample.png)|<img src="images/readme/4x5_small_mono_photo.jpg" width="550">| 4x5 very basic font using subpixels for the edges. |
 
-|![separator](images/readme/thin_line.png)  ||
-|:-----------------------------------------------------------------|:---------------------------|
-|![2x4 micro ascii font](images/readme/µRed_mono.png)  | **µRed_Mono** has a fixed size of 2x4. |
-|![3x4 micro ascii font](images/readme/µRed_wide.png)    | **µRed_wide** has a fixed height of 4, but a variable width to allow for characters like W, M, N, H to be more readable. |
-|![Variable width and height micro ascii font](images/readme/µRed_wide_tall.png) | **µRed_wide_tall** doesn't have a fixed height. Characters like "g", "p", "q" and "," hang one pixel lower for aestetic purposes. |
-|![Cursive micro ascii font](images/readme/µCursive.png) | **µCursive** is a cursive-style variation that is somehow very readable. |
+
 
 The font set uses RGB subpixels to represent letters, so it needs colors to work. The rightmost pixels is always at most red, so two letters can be adjacent without a pixel of separation and still be reasonably readable, since there are still two empty subpixels between the letters. **This makes the mono version as compact as a 1 pixel wide font in practice!**
 
