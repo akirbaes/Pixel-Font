@@ -68,6 +68,7 @@ font_vsep = 1
 font_x0 = 1
 font_y0 = 1
 force_case = 0
+show_space = 0
 superpose_missing_accents = True
 accent_vertical_gap = 1
 fill_missing_with_unidecode = True
@@ -98,20 +99,22 @@ def save_font_options(): #current_height, current_width):
     ini+= "font_vsep",font_vsep
     ini+= "spacesize",spacesize
     ini+= "capsstate",force_case
+    ini+= "showspacecharacter",show_space
     ini+= "kerning",current_kerning
     ini+= "alignment", alignment
     ini.save()
     if(isinstance(kerning_data,dict)):
         save_json(kerning_filename(current_font,current_kerning),kerning_data)
     
-def load_font_options(filename="default_options",silent=True):
+def load_font_options(filename="default_options",silent=False):
     try:
         global font_hsep,\
                font_vsep,\
                spacesize,\
                force_case,\
                current_kerning,\
-               alignment
+               alignment,\
+               show_space
         filename="fonts"+os.sep+font_name()[:-4]+".ini"
         ini = QuickIni(filename)
         ini.load()
@@ -120,6 +123,7 @@ def load_font_options(filename="default_options",silent=True):
         font_vsep = ini.get("font_vsep",2)
         spacesize = ini.get("spacesize",3)
         force_case   = ini.get("capsstate",0)
+        show_space   = ini.get("showspacecharacter",0)
         current_kerning  = ini.get("kerning",1)
         alignment  = ini/"alignment"/0
         update_font()
@@ -573,7 +577,7 @@ def determine_character(letter,next_letter=None,missing_letter_character=None):
     accent_width = None
     accent_shift = None
     kerning = 0
-    if(letter==" "):
+    if(letter==" " and show_space==0):
         return ((None,spacesize),)
     else:
         char_image = get_char_image(letter)
@@ -609,7 +613,8 @@ def determine_character(letter,next_letter=None,missing_letter_character=None):
                 import traceback
                 print(e)
                 traceback.print_exc()
-        
+        if(char_image==None and letter==" "):
+            return ((None,spacesize),)
         # if(letter=="I" and get_char_image("İ")!=None):
             # char_image = get_char_image("İ")
             # letter = "İ"
@@ -1026,7 +1031,14 @@ def create_optionswindow(root,size_callback):
         capvar.trace("w",capfun)
         capvar.set(force_case)
         
-        
+        showspacevar = IntVar(value=show_space)
+        Checkbutton(leftframe,text="Show space character",variable = showspacevar).pack(side=TOP)
+        def showspacefun(*args):
+            global show_space
+            show_space = showspacevar.get()
+            size_callback()
+        showspacevar.trace("w",showspacefun)
+        showspacevar.set(show_space)
         
         Label(leftframe,text="Alignment").pack(side=TOP)
         alignvar = IntVar(value=alignment)
@@ -1063,6 +1075,7 @@ def create_optionswindow(root,size_callback):
             kernvar.set(kerning_full_name(current_kerning))
             alignvar.set(alignment)
             recaplabel_update()
+            showspacevar.set(show_space)
             #ftvar.set(FONT_TYPES[current_font])
             
 
